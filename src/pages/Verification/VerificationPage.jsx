@@ -28,6 +28,7 @@ export const VerificationPage = () => {
   const navigate = useNavigate();
 
   const isExistingInList = currentUser?.faculty && NAU_FACULTIES.includes(currentUser.faculty);
+  const [name, setName] = useState(currentUser?.name || '');
   const [studentId, setStudentId] = useState(currentUser?.studentId || '');
   const [faculty, setFaculty] = useState(
     currentUser?.faculty 
@@ -80,6 +81,10 @@ export const VerificationPage = () => {
   // Handle Form Submit
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!name.trim()) {
+      toast.warning('Vui lòng nhập Họ và tên.');
+      return;
+    }
     if (!studentId.trim()) {
       toast.warning('Vui lòng nhập Mã số sinh viên NAU.');
       return;
@@ -106,6 +111,7 @@ export const VerificationPage = () => {
       }
 
       await submitVerification(currentUser.id, {
+        name: name.trim(),
         studentId: studentId.trim(),
         faculty: finalFaculty,
         phone: phone.trim(),
@@ -113,6 +119,7 @@ export const VerificationPage = () => {
       });
 
       updateUserProfile({
+        name: name.trim(),
         studentId: studentId.trim(),
         faculty: finalFaculty,
         phone: phone.trim(),
@@ -215,8 +222,10 @@ export const VerificationPage = () => {
           <form onSubmit={handleSubmit} className="space-y-5">
             <Input
               label="Họ và tên sinh viên"
-              disabled
-              value={currentUser.name}
+              required
+              placeholder="Nhập họ và tên thật của bạn"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
             />
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

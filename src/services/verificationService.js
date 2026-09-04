@@ -15,9 +15,10 @@ import { saveUserOverride, getUserOverrides } from './adminService';
  * Submit verification request for student card / CCCD
  */
 export const submitVerification = async (userId, data) => {
-  const { studentId, faculty, documentUrl, phone } = data;
+  const { name, studentId, faculty, documentUrl, phone } = data;
   const updateData = {
     userId,
+    ...(name ? { name } : {}),
     studentId,
     faculty,
     verificationDocument: documentUrl,
@@ -32,6 +33,7 @@ export const submitVerification = async (userId, data) => {
     try {
       const userRef = doc(db, 'users', userId);
       await setDoc(userRef, {
+        ...(name ? { name } : {}),
         studentId,
         faculty,
         verificationDocument: documentUrl,
