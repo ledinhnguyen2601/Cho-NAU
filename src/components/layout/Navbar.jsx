@@ -1,10 +1,10 @@
-// File: src/components/layout/Navbar.jsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
 import { useToast } from '../../context/ToastContext';
 import { ThemeToggle } from '../common/ThemeToggle';
+import { getUnreadConversationsCount } from '../../services/chatService';
 import { 
   Search, 
   PlusCircle, 
@@ -32,6 +32,25 @@ export const Navbar = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [unreadChatCount, setUnreadChatCount] = useState(0);
+
+  useEffect(() => {
+    if (!currentUser?.id) {
+      setUnreadChatCount(0);
+      return;
+    }
+
+    const checkUnread = async () => {
+      try {
+        const count = await getUnreadConversationsCount(currentUser.id);
+        setUnreadChatCount(count);
+      } catch (e) {}
+    };
+
+    checkUnread();
+    const interval = setInterval(checkUnread, 15000);
+    return () => clearInterval(interval);
+  }, [currentUser?.id, location.pathname]);
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -121,7 +140,9 @@ export const Navbar = () => {
               title="Tin nhắn giao dịch"
             >
               <MessageSquare className="w-5 h-5" />
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-nau-red ring-2 ring-white dark:ring-slate-950" />
+              {currentUser && unreadChatCount > 0 && (
+                <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 rounded-full bg-nau-red ring-2 ring-white dark:ring-slate-950 animate-pulse-subtle" />
+              )}
             </Link>
 
             {/* Shopping Cart */}
@@ -171,9 +192,8 @@ export const Navbar = () => {
                       alt={currentUser.name}
                       className="w-8 h-8 rounded-full object-cover border border-nau-border dark:border-nau-border"
                     />
-                    {isVerified && (
-                      <BadgeCheck className="w-3.5 h-3.5 text-nau-blue bg-white dark:bg-nau-background rounded-full absolute -bottom-1 -right-1" />
-                    )}
+                    {/* Green online presence indicator */}
+                    <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-500 border-2 border-white dark:border-slate-900 rounded-full" title="Đang trực tuyến" />
                   </div>
                   <span className="hidden xl:block text-xs font-semibold text-nau-text dark:text-nau-text max-w-[100px] truncate">
                     {currentUser.name}

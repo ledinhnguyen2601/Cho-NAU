@@ -1,11 +1,13 @@
 // File: src/context/AuthContext.jsx
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { 
   auth, 
   db, 
   googleProvider, 
   facebookProvider, 
   signInWithPopup, 
+  signInWithRedirect,
+  getRedirectResult,
   fbSignOut, 
   onAuthStateChanged,
   doc, 
@@ -24,14 +26,38 @@ const AuthContext = createContext();
 export const AuthProvider = ({ children }) => {
   const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const heartbeatTimerRef = useRef(null);
 
-  // Firebase auth state observer if configured
+  // Helper to update user's online presence in Firestore
+  const updateOnlinePresence = async (uid, isOnline) => {
+    if (!db || !uid) return;
+    try {
+      const userRef = doc(db, 'users', uid);
+      await setDoc(userRef, {
+        isOnline: Boolean(isOnline),
+        lastActive: new Date().toISOString()
+      }, { merge: true });
+    } catch (e) {
+      console.warn('Presence sync error:', e);
+    }
+  };
+
+  // Firebase auth state observer & redirect handler
   useEffect(() => {
     if (!isFirebaseConfigured || !auth) {
       console.warn("Firebase is not configured.");
       setLoading(false);
       return;
     }
+
+    // Process redirect result if returning from mobile redirect sign-in
+    getRedirectResult(auth).then(async (result) => {
+      if (result && result.user) {
+        console.log('✅ Google redirect login successful:', result.user.email);
+      }
+    }).catch(err => {
+      console.warn('Redirect result error (can be ignored if not redirecting):', err);
+    });
 
     const unsubscribe = onAuthStateChanged(auth, async (fbUser) => {
       if (fbUser) {
@@ -43,19 +69,24 @@ export const AuthProvider = ({ children }) => {
           const userDocRef = doc(db, 'users', fbUser.uid);
           const userSnap = await getDoc(userDocRef);
 
+          let userData;
           if (userSnap.exists()) {
-            const data = userSnap.data();
+            userData = userSnap.data();
             // Automatically upgrade white-listed admin to 'admin' and 'verified'
-            if (isDefaultAdmin && (data.role !== 'admin' || data.verificationStatus !== 'verified')) {
-              data.role = 'admin';
-              data.verificationStatus = 'verified';
+            if (isDefaultAdmin && (userData.role !== 'admin' || userData.verificationStatus !== 'verified')) {
+              userData.role = 'admin';
+              userData.verificationStatus = 'verified';
               try {
                 await setDoc(userDocRef, { role: 'admin', verificationStatus: 'verified' }, { merge: true });
               } catch (e) {
                 console.warn('Could not sync admin role to Firestore:', e);
               }
             }
-            setCurrentUser({ id: fbUser.uid, ...data });
+            // Mark online
+            userData.isOnline = true;
+            userData.lastActive = new Date().toISOString();
+            await setDoc(userDocRef, { isOnline: true, lastActive: userData.lastActive }, { merge: true }).catch(() => {});
+            setCurrentUser({ id: fbUser.uid, ...userData });
           } else {
             // New user registration in Firestore
             const newUser = {
@@ -72,31 +103,74 @@ export const AuthProvider = ({ children }) => {
               ratingCount: 0,
               status: 'active',
               phone: fbUser.phoneNumber || '',
+              isOnline: true,
+              lastActive: new Date().toISOString(),
               joinedDate: new Date().toISOString()
             };
             await setDoc(userDocRef, newUser);
             setCurrentUser(newUser);
           }
+
+          // Heartbeat interval every 60s
+          if (heartbeatTimerRef.current) clearInterval(heartbeatTimerRef.current);
+          heartbeatTimerRef.current = setInterval(() => {
+            updateOnlinePresence(fbUser.uid, true);
+          }, 60000);
+
         } catch (err) {
           console.error('Error fetching Firestore user:', err);
         }
       } else {
+        if (heartbeatTimerRef.current) clearInterval(heartbeatTimerRef.current);
         setCurrentUser(null);
       }
       setLoading(false);
     });
 
-    return () => unsubscribe();
+    // Window offline presence cleanup
+    const handleBeforeUnload = () => {
+      if (auth.currentUser) {
+        updateOnlinePresence(auth.currentUser.uid, false);
+      }
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    window.addEventListener('pagehide', handleBeforeUnload);
+
+    return () => {
+      if (heartbeatTimerRef.current) clearInterval(heartbeatTimerRef.current);
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      window.removeEventListener('pagehide', handleBeforeUnload);
+      unsubscribe();
+    };
   }, []);
 
-  // Sign in with Google
+  // Sign in with Google with mobile popup & redirect fallback
   const signInWithGoogle = async () => {
     if (isFirebaseConfigured && auth) {
       try {
+        // Try popup first (fastest for desktop and standard mobile browsers)
         const result = await signInWithPopup(auth, googleProvider);
         return result.user;
       } catch (error) {
-        console.error('Google Sign In Error:', error);
+        console.warn('Popup Google Sign In failed, attempting fallback or reporting:', error);
+        
+        // If popup was blocked or storage is partitioned (common in mobile WebViews), try redirect
+        if (
+          error.code === 'auth/popup-blocked' || 
+          error.code === 'auth/cancelled-popup-request' ||
+          error.code === 'auth/popup-closed-by-user' ||
+          error.message?.includes('missing initial state') ||
+          error.message?.includes('sessionStorage')
+        ) {
+          try {
+            console.info('Switching to signInWithRedirect for mobile browser compatibility...');
+            await signInWithRedirect(auth, googleProvider);
+            return null;
+          } catch (redirectErr) {
+            console.error('Redirect sign in failed:', redirectErr);
+            throw redirectErr;
+          }
+        }
         throw error;
       }
     } else {
@@ -121,6 +195,10 @@ export const AuthProvider = ({ children }) => {
 
   // Sign Out
   const logout = async () => {
+    if (currentUser?.id) {
+      await updateOnlinePresence(currentUser.id, false);
+    }
+    if (heartbeatTimerRef.current) clearInterval(heartbeatTimerRef.current);
     if (isFirebaseConfigured && auth) {
       await fbSignOut(auth);
     }

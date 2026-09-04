@@ -1,5 +1,5 @@
 // File: src/services/adminService.js
-import { db, collection, getDocs, doc, updateDoc, query, where, getCountFromServer } from '../config/firebase';
+import { db, collection, getDocs, doc, getDoc, setDoc, updateDoc, query, where, getCountFromServer } from '../config/firebase';
 
 /**
  * Get comprehensive stats for Admin Dashboard
@@ -113,6 +113,70 @@ export const toggleUserRole = async (userId, currentRole) => {
   } catch (e) {
     console.error("Error toggling user role:", e);
     return null;
+  }
+};
+
+const DEFAULT_SETTINGS = {
+  siteName: 'Chợ NAU',
+  siteSlogan: 'Nền Tảng TMĐT Đồ Cũ Sinh Viên Đại Học Nghệ An',
+  supportEmail: 'support.chonau@nau.edu.vn',
+  supportHotline: '(0238) 3888 999',
+  maxImagesPerProduct: 6,
+  requireVerificationToPost: true,
+  requireVerificationToChat: true,
+  platformFeeRate: 0,
+  autoExpireDays: 45,
+  notifyEmailOnNewMessage: true,
+  notifyEmailOnOrderUpdate: true,
+  notifyEmailOnVerification: true
+};
+
+/**
+ * Get system configuration settings
+ */
+export const getSystemSettings = async () => {
+  // Try localStorage first for instantaneous load
+  let cached = null;
+  try {
+    const raw = localStorage.getItem('nau_system_settings');
+    if (raw) cached = JSON.parse(raw);
+  } catch (e) {}
+
+  if (!db) return cached || DEFAULT_SETTINGS;
+
+  try {
+    const docRef = doc(db, 'settings', 'global_config');
+    const snap = await getDoc(docRef);
+    if (snap.exists()) {
+      const data = { ...DEFAULT_SETTINGS, ...snap.data() };
+      localStorage.setItem('nau_system_settings', JSON.stringify(data));
+      return data;
+    }
+  } catch (e) {
+    console.warn("Could not fetch settings from Firestore:", e);
+  }
+
+  return cached || DEFAULT_SETTINGS;
+};
+
+/**
+ * Save system configuration settings
+ */
+export const saveSystemSettings = async (settings) => {
+  const merged = { ...DEFAULT_SETTINGS, ...settings, updatedAt: new Date().toISOString() };
+  try {
+    localStorage.setItem('nau_system_settings', JSON.stringify(merged));
+  } catch (e) {}
+
+  if (!db) return merged;
+
+  try {
+    const docRef = doc(db, 'settings', 'global_config');
+    await setDoc(docRef, merged, { merge: true });
+    return merged;
+  } catch (e) {
+    console.error("Error saving settings to Firestore:", e);
+    throw e;
   }
 };
 

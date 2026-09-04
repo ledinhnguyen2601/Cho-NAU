@@ -2,11 +2,13 @@
 import { 
   db, 
   doc, 
+  setDoc,
   updateDoc, 
   getDocs, 
   collection, 
   query, 
-  where
+  where,
+  getDoc
 } from '../config/firebase';
 
 /**
@@ -15,6 +17,7 @@ import {
 export const submitVerification = async (userId, data) => {
   const { studentId, faculty, documentUrl, phone } = data;
   const updateData = {
+    userId,
     studentId,
     faculty,
     verificationDocument: documentUrl,
@@ -26,7 +29,19 @@ export const submitVerification = async (userId, data) => {
   if (!db) throw new Error("Firebase chưa được cấu hình");
   try {
     const userRef = doc(db, 'users', userId);
-    await updateDoc(userRef, updateData);
+    await setDoc(userRef, {
+      studentId,
+      faculty,
+      verificationDocument: documentUrl,
+      verificationStatus: 'pending_verification',
+      phone: phone || '',
+      verificationSubmittedAt: updateData.verificationSubmittedAt
+    }, { merge: true });
+
+    // Also write to dedicated verifications collection for easy admin indexing
+    const verifRef = doc(db, 'verifications', userId);
+    await setDoc(verifRef, updateData, { merge: true });
+
     return updateData;
   } catch (e) {
     console.error('Firestore submitVerification error:', e);
@@ -47,7 +62,11 @@ export const approveVerification = async (userId) => {
   if (!db) throw new Error("Firebase chưa được cấu hình");
   try {
     const userRef = doc(db, 'users', userId);
-    await updateDoc(userRef, updateData);
+    await setDoc(userRef, updateData, { merge: true });
+
+    const verifRef = doc(db, 'verifications', userId);
+    await setDoc(verifRef, updateData, { merge: true });
+
     return updateData;
   } catch (e) {
     console.error('Firestore approveVerification error:', e);
@@ -67,7 +86,11 @@ export const rejectVerification = async (userId, reason) => {
   if (!db) throw new Error("Firebase chưa được cấu hình");
   try {
     const userRef = doc(db, 'users', userId);
-    await updateDoc(userRef, updateData);
+    await setDoc(userRef, updateData, { merge: true });
+
+    const verifRef = doc(db, 'verifications', userId);
+    await setDoc(verifRef, updateData, { merge: true });
+
     return updateData;
   } catch (e) {
     console.error('Firestore rejectVerification error:', e);
@@ -81,11 +104,29 @@ export const rejectVerification = async (userId, reason) => {
 export const getPendingVerifications = async () => {
   if (!db) return [];
   try {
-    const q = query(collection(db, 'users'), where('verificationStatus', '==', 'pending_verification'));
-    const snapshot = await getDocs(q);
-    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    const qUsers = query(collection(db, 'users'), where('verificationStatus', '==', 'pending_verification'));
+    const userSnap = await getDocs(qUsers);
+    const usersList = userSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+    // Also check verifications collection to merge
+    try {
+      const qVerif = query(collection(db, 'verifications'), where('verificationStatus', '==', 'pending_verification'));
+      const verifSnap = await getDocs(qVerif);
+      verifSnap.forEach(vDoc => {
+        const vData = vDoc.data();
+        const existingIdx = usersList.findIndex(u => u.id === vDoc.id);
+        if (existingIdx >= 0) {
+          usersList[existingIdx] = { ...usersList[existingIdx], ...vData };
+        } else {
+          usersList.push({ id: vDoc.id, ...vData });
+        }
+      });
+    } catch(err) {}
+
+    return usersList;
   } catch (e) {
     console.error('Firestore getPendingVerifications error:', e);
     return [];
   }
 };
+

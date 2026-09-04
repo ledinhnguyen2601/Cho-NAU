@@ -1,10 +1,12 @@
-// File: src/config/firebase.js
-import { initializeApp, getApps, getApp } from 'firebase/app';
 import { 
   getAuth, 
   GoogleAuthProvider, 
   FacebookAuthProvider, 
   signInWithPopup, 
+  signInWithRedirect,
+  getRedirectResult,
+  setPersistence,
+  browserLocalPersistence,
   signOut as fbSignOut,
   onAuthStateChanged
 } from 'firebase/auth';
@@ -69,6 +71,10 @@ if (isFirebaseConfigured) {
   try {
     app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
     auth = getAuth(app);
+    // Explicitly enforce local storage persistence to prevent missing initial state errors on mobile / partition
+    setPersistence(auth, browserLocalPersistence).catch(err => {
+      console.warn('Firebase setPersistence warning:', err);
+    });
     db = getFirestore(app);
     storage = getStorage(app);
     console.log('✅ Firebase SDK initialized successfully for Chợ NAU');
@@ -91,6 +97,10 @@ export {
   storage,
   // Auth exports
   signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult,
+  setPersistence,
+  browserLocalPersistence,
   fbSignOut,
   onAuthStateChanged,
   // Firestore exports

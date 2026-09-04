@@ -1,6 +1,6 @@
-// File: src/pages/Admin/AdminUsersPage.jsx
 import React, { useState, useEffect } from 'react';
 import { getAllUsers, updateUserStatus, toggleUserRole } from '../../services/adminService';
+import { approveVerification } from '../../services/verificationService';
 import { UserModerationTable } from '../../components/admin/UserModerationTable';
 import { useToast } from '../../context/ToastContext';
 import { Users, Search, Filter } from 'lucide-react';
@@ -46,6 +46,16 @@ export const AdminUsersPage = () => {
       toast.success('Đã cập nhật quyền người dùng');
     } catch (e) {
       toast.error('Cập nhật quyền thất bại');
+    }
+  };
+
+  const handleApproveVerification = async (userId) => {
+    try {
+      await approveVerification(userId);
+      toast.success('Đã duyệt Thẻ sinh viên cho người dùng này!');
+      loadUsers();
+    } catch (e) {
+      toast.error('Không thể phê duyệt thẻ sinh viên.');
     }
   };
 
@@ -107,6 +117,7 @@ export const AdminUsersPage = () => {
         users={filteredUsers}
         onToggleStatus={handleToggleStatus}
         onToggleRole={handleToggleRole}
+        onApproveVerification={handleApproveVerification}
       />
     </div>
   );

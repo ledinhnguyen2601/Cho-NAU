@@ -1,7 +1,7 @@
 // File: src/pages/Admin/AdminVerificationsPage.jsx
 import React, { useState, useEffect } from 'react';
 import { getAllUsers } from '../../services/adminService';
-import { approveVerification, rejectVerification } from '../../services/verificationService';
+import { approveVerification, rejectVerification, getPendingVerifications } from '../../services/verificationService';
 import { VerificationModerationTable } from '../../components/admin/VerificationModerationTable';
 import { useToast } from '../../context/ToastContext';
 import { ShieldCheck, UserCheck } from 'lucide-react';
@@ -14,8 +14,23 @@ export const AdminVerificationsPage = () => {
   const loadData = async () => {
     setIsLoading(true);
     try {
-      const data = await getAllUsers();
-      setUsers(data);
+      const [allUsers, pendingVerifs] = await Promise.all([
+        getAllUsers().catch(() => []),
+        getPendingVerifications().catch(() => [])
+      ]);
+
+      const userMap = new Map();
+      allUsers.forEach(u => userMap.set(u.id, u));
+      pendingVerifs.forEach(v => {
+        const existing = userMap.get(v.id || v.userId);
+        if (existing) {
+          userMap.set(existing.id, { ...existing, ...v, verificationStatus: 'pending_verification' });
+        } else {
+          userMap.set(v.id || v.userId, { ...v, verificationStatus: 'pending_verification' });
+        }
+      });
+
+      setUsers(Array.from(userMap.values()));
     } catch (e) {
       console.error(e);
     } finally {

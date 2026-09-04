@@ -1,8 +1,10 @@
 // File: src/components/chat/ChatWindow.jsx
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { MessageBubble } from './MessageBubble';
 import { ChatInput } from './ChatInput';
+import { Modal } from '../common/Modal';
+import { Button } from '../common/Button';
 import { formatCurrency } from '../../utils/formatters';
 import { 
   ShieldCheck, 
@@ -10,7 +12,8 @@ import {
   ShoppingBag, 
   AlertTriangle, 
   ShieldAlert,
-  ArrowLeft
+  ArrowLeft,
+  Trash2
 } from 'lucide-react';
 
 export const ChatWindow = ({
@@ -18,9 +21,12 @@ export const ChatWindow = ({
   currentUserId,
   isUserVerified,
   onSendMessage,
+  onDeleteConversation,
   onBack
 }) => {
   const messagesEndRef = useRef(null);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -43,10 +49,21 @@ export const ChatWindow = ({
   const otherPartyName = conversation.sellerId === currentUserId ? conversation.buyerName : conversation.sellerName;
   const isSeller = conversation.sellerId === currentUserId;
 
+  const handleDeleteConfirm = async () => {
+    if (!onDeleteConversation) return;
+    setIsDeleting(true);
+    try {
+      await onDeleteConversation(conversation.id);
+      setIsDeleteModalOpen(false);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   return (
     <div className="flex-1 flex flex-col h-full bg-nau-background/50 dark:bg-nau-background/50 overflow-hidden">
       
-      {/* Top Header: Partner info + Product Quick Card */}
+      {/* Top Header: Partner info + Product Quick Card + Delete Conversation */}
       <div className="p-3 sm:p-4 bg-nau-surface dark:bg-nau-background border-b border-nau-border dark:border-nau-border shadow-sm shrink-0">
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-2.5">
@@ -63,6 +80,8 @@ export const ChatWindow = ({
                 <h3 className="text-sm font-bold text-nau-text dark:text-nau-text">
                   {otherPartyName}
                 </h3>
+                {/* Green online presence indicator */}
+                <span className="w-2 h-2 rounded-full bg-emerald-500" title="Đang trực tuyến" />
                 <span className="text-[10px] px-2 py-0.5 bg-nau-success/10 text-nau-success dark:bg-nau-success/20 dark:text-nau-success font-semibold rounded-full border border-nau-success/30 dark:border-nau-success/40">
                   {isSeller ? 'Người mua' : 'Người bán'}
                 </span>
@@ -73,28 +92,39 @@ export const ChatWindow = ({
             </div>
           </div>
 
-          {/* Product Header Card */}
-          <div className="flex items-center gap-2.5 bg-nau-background dark:bg-nau-surface p-1.5 sm:p-2 rounded-xl border border-nau-border dark:border-nau-border max-w-xs sm:max-w-sm">
-            <img
-              src={conversation.productImage || 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=100'}
-              alt={conversation.productTitle}
-              className="w-9 h-9 rounded-lg object-cover shrink-0"
-            />
-            <div className="min-w-0 pr-1 hidden sm:block">
-              <p className="text-xs font-bold text-nau-text dark:text-nau-text truncate">
-                {conversation.productTitle}
-              </p>
-              <p className="text-xs font-black text-nau-primary dark:text-nau-primary">
-                {formatCurrency(conversation.productPrice)}
-              </p>
+          <div className="flex items-center gap-2">
+            {/* Product Header Card */}
+            <div className="flex items-center gap-2.5 bg-nau-background dark:bg-nau-surface p-1.5 sm:p-2 rounded-xl border border-nau-border dark:border-nau-border max-w-xs sm:max-w-sm">
+              <img
+                src={conversation.productImage || 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=100'}
+                alt={conversation.productTitle}
+                className="w-9 h-9 rounded-lg object-cover shrink-0"
+              />
+              <div className="min-w-0 pr-1 hidden sm:block">
+                <p className="text-xs font-bold text-nau-text dark:text-nau-text truncate">
+                  {conversation.productTitle}
+                </p>
+                <p className="text-xs font-black text-nau-primary dark:text-nau-primary">
+                  {formatCurrency(conversation.productPrice)}
+                </p>
+              </div>
+              <Link
+                to={`/product/${conversation.productId}`}
+                className="p-1.5 text-nau-text-muted hover:text-nau-primary dark:text-nau-text-muted dark:hover:text-nau-primary"
+                title="Xem trang chi tiết sản phẩm"
+              >
+                <ExternalLink className="w-4 h-4" />
+              </Link>
             </div>
-            <Link
-              to={`/product/${conversation.productId}`}
-              className="p-1.5 text-nau-text-muted hover:text-nau-primary dark:text-nau-text-muted dark:hover:text-nau-primary"
-              title="Xem trang chi tiết sản phẩm"
+
+            {/* Delete Conversation Button */}
+            <button
+              onClick={() => setIsDeleteModalOpen(true)}
+              className="p-2 text-slate-400 hover:text-nau-danger hover:bg-red-50 dark:hover:bg-red-950/30 rounded-xl transition-colors"
+              title="Xóa cuộc trò chuyện này"
             >
-              <ExternalLink className="w-4 h-4" />
-            </Link>
+              <Trash2 className="w-4 h-4" />
+            </button>
           </div>
         </div>
       </div>
@@ -139,6 +169,35 @@ export const ChatWindow = ({
         onSendMessage={onSendMessage}
         disabled={!isUserVerified}
       />
+
+      {/* Delete Confirmation Modal */}
+      <Modal
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        title="Xóa Cuộc Trò Chuyện"
+        maxWidth="max-w-md"
+      >
+        <div className="space-y-4">
+          <p className="text-xs text-nau-text-muted dark:text-nau-text-muted">
+            Bạn có chắc chắn muốn xóa toàn bộ lịch sử tin nhắn của cuộc trò chuyện với <strong>{otherPartyName}</strong>? Hành động này không thể hoàn tác.
+          </p>
+          <div className="flex justify-end gap-2 pt-2 border-t border-slate-100 dark:border-nau-border">
+            <Button variant="outline" size="sm" onClick={() => setIsDeleteModalOpen(false)}>
+              Hủy
+            </Button>
+            <Button
+              variant="danger"
+              size="sm"
+              isLoading={isDeleting}
+              onClick={handleDeleteConfirm}
+            >
+              Xóa cuộc trò chuyện
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
     </div>
   );
 };
+

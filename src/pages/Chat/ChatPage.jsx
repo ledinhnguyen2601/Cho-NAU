@@ -3,13 +3,23 @@ import React, { useState, useEffect } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
-import { getUserConversations, getConversationById, sendMessage, markMessagesAsRead, subscribeToMessages } from '../../services/chatService';
+import { 
+  getUserConversations, 
+  getConversationById, 
+  sendMessage, 
+  markMessagesAsRead, 
+  markAllConversationsAsRead,
+  deleteConversation,
+  subscribeToMessages 
+} from '../../services/chatService';
 import { ConversationList } from '../../components/chat/ConversationList';
 import { ChatWindow } from '../../components/chat/ChatWindow';
 import { 
   MessageSquare, 
   Search, 
-  ArrowLeft
+  ArrowLeft,
+  CheckCheck,
+  Trash2
 } from 'lucide-react';
 
 export const ChatPage = () => {
@@ -89,6 +99,46 @@ export const ChatPage = () => {
     return () => unsubscribe();
   }, [activeConversation?.id]);
 
+  const handleSelectConversation = (conv) => {
+    setActiveConversation(conv);
+    markMessagesAsRead(conv.id, currentUser.id);
+    setSearchParams({ convId: conv.id });
+  };
+
+  const handleSendMessage = async (text) => {
+    if (!activeConversation) return;
+    try {
+      await sendMessage(activeConversation.id, currentUser.id, text, currentUser.name);
+    } catch (err) {
+      toast.error('Không thể gửi tin nhắn.');
+    }
+  };
+
+  const handleMarkAllRead = async () => {
+    if (!currentUser?.id) return;
+    try {
+      await markAllConversationsAsRead(currentUser.id);
+      setConversations(prev => prev.map(c => ({ ...c, unreadCount: 0 })));
+      toast.success('Đã đánh dấu đọc tất cả tin nhắn!');
+    } catch (e) {
+      toast.error('Không thể cập nhật trạng thái tin nhắn.');
+    }
+  };
+
+  const handleDeleteConversation = async (convId) => {
+    try {
+      await deleteConversation(convId);
+      setConversations(prev => prev.filter(c => c.id !== convId));
+      if (activeConversation?.id === convId) {
+        setActiveConversation(null);
+        setSearchParams({});
+      }
+      toast.success('Đã xóa cuộc trò chuyện thành công.');
+    } catch (e) {
+      toast.error('Lỗi khi xóa cuộc trò chuyện.');
+    }
+  };
+
   if (!currentUser) {
     return (
       <div className="max-w-md mx-auto my-12 p-8 bg-nau-surface dark:bg-nau-background rounded-3xl border border-nau-border dark:border-nau-border text-center space-y-4 shadow-sm">
@@ -105,22 +155,6 @@ export const ChatPage = () => {
       </div>
     );
   }
-
-  const handleSelectConversation = (conv) => {
-    setActiveConversation(conv);
-    markMessagesAsRead(conv.id, currentUser.id);
-    setSearchParams({ convId: conv.id });
-  };
-
-  const handleSendMessage = async (text) => {
-    if (!activeConversation) return;
-    try {
-      await sendMessage(activeConversation.id, currentUser.id, text);
-      // The real-time listener will automatically update the UI
-    } catch (err) {
-      toast.error('Không thể gửi tin nhắn.');
-    }
-  };
 
   const filteredConversations = conversations.filter(c => {
     const q = searchFilter.toLowerCase().trim();
@@ -141,16 +175,25 @@ export const ChatPage = () => {
           activeConversation ? 'hidden md:flex' : 'flex'
         }`}
       >
-        {/* Search header */}
+        {/* Search & Actions Header */}
         <div className="p-3.5 border-b border-slate-100 dark:border-nau-border space-y-2.5">
           <div className="flex items-center justify-between">
             <h2 className="text-sm font-bold text-nau-text dark:text-nau-text flex items-center gap-2">
               <MessageSquare className="w-4 h-4 text-nau-primary" />
               <span>Tin Nhắn Giao Dịch</span>
             </h2>
-            <span className="text-[11px] font-semibold text-slate-400">
-              {conversations.length} cuộc trò chuyện
-            </span>
+            
+            {/* Mark all as read button */}
+            {conversations.length > 0 && (
+              <button
+                onClick={handleMarkAllRead}
+                className="inline-flex items-center gap-1 text-[11px] font-semibold text-nau-primary hover:text-nau-primary-hover transition-colors px-2 py-1 rounded-lg hover:bg-nau-primary/10"
+                title="Đánh dấu tất cả là đã đọc"
+              >
+                <CheckCheck className="w-3.5 h-3.5" />
+                <span>Đọc tất cả</span>
+              </button>
+            )}
           </div>
 
           <div className="relative">
@@ -171,6 +214,7 @@ export const ChatPage = () => {
             conversations={filteredConversations}
             activeId={activeConversation?.id}
             onSelect={handleSelectConversation}
+            onDeleteConversation={handleDeleteConversation}
             currentUserId={currentUser.id}
           />
         </div>
@@ -187,6 +231,7 @@ export const ChatPage = () => {
           currentUserId={currentUser.id}
           isUserVerified={isVerified}
           onSendMessage={handleSendMessage}
+          onDeleteConversation={handleDeleteConversation}
           onBack={() => {
             setActiveConversation(null);
             setSearchParams({});
@@ -197,3 +242,4 @@ export const ChatPage = () => {
     </div>
   );
 };
+

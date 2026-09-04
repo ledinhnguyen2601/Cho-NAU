@@ -33,9 +33,24 @@ service cloud.firestore {
       allow read: if isAuthenticated();
       // User can create their initial record upon signup
       allow create: if isAuthenticated() && request.auth.uid == userId;
-      // User can edit their own contact info; Admin can edit roles/status/verifications
-      allow update: if (isOwner(userId) && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['role', 'verificationStatus']))) || isAdmin();
+      // User can edit their own contact info & submit verification; Admin can edit roles/status/verifications
+      allow update: if isAdmin() || (
+        isOwner(userId) && (
+          !request.resource.data.diff(resource.data).affectedKeys().hasAny(['role']) &&
+          (
+            !request.resource.data.diff(resource.data).affectedKeys().hasAny(['verificationStatus']) ||
+            request.resource.data.verificationStatus == 'pending_verification'
+          )
+        )
+      );
       // Only Admin can delete user
+      allow delete: if isAdmin();
+    }
+
+    // Verifications collection (dual sync for moderation)
+    match /verifications/{verificationId} {
+      allow read: if isAuthenticated() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow create, update: if isAuthenticated() && (request.resource.data.userId == request.auth.uid || isAdmin());
       allow delete: if isAdmin();
     }
 
@@ -78,16 +93,23 @@ service cloud.firestore {
         isAdmin()
       );
       // Verified users can start conversations
-      allow create: if isVerifiedUser() && isNotSuspended();
+      allow create: if isAuthenticated() && isNotSuspended();
       allow update: if isAuthenticated() && (
         resource.data.buyerId == request.auth.uid || 
-        resource.data.sellerId == request.auth.uid
+        resource.data.sellerId == request.auth.uid ||
+        isAdmin()
+      );
+      allow delete: if isAuthenticated() && (
+        resource.data.buyerId == request.auth.uid || 
+        resource.data.sellerId == request.auth.uid || 
+        isAdmin()
       );
 
       // Subcollection messages
       match /messages/{messageId} {
         allow read: if isAuthenticated();
-        allow create: if isVerifiedUser() && isNotSuspended() && request.resource.data.senderId == request.auth.uid;
+        allow create: if isAuthenticated() && isNotSuspended() && request.resource.data.senderId == request.auth.uid;
+        allow update, delete: if isAuthenticated();
       }
     }
 

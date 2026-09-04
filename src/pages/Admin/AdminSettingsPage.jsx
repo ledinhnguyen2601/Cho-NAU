@@ -1,8 +1,9 @@
 // File: src/pages/Admin/AdminSettingsPage.jsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useToast } from '../../context/ToastContext';
 import { Button } from '../../components/common/Button';
 import { Input } from '../../components/common/Input';
+import { getSystemSettings, saveSystemSettings } from '../../services/adminService';
 import { 
   Settings, 
   ShieldCheck, 
@@ -10,7 +11,10 @@ import {
   Tag, 
   Sliders, 
   Bell, 
-  Save 
+  Save,
+  Mail,
+  CheckCircle2,
+  RefreshCw
 } from 'lucide-react';
 
 export const AdminSettingsPage = () => {
@@ -24,31 +28,58 @@ export const AdminSettingsPage = () => {
     maxImagesPerProduct: 6,
     requireVerificationToPost: true,
     requireVerificationToChat: true,
-    platformFeeRate: 0, // 0% for students
-    autoExpireDays: 45
+    platformFeeRate: 0,
+    autoExpireDays: 45,
+    notifyEmailOnNewMessage: true,
+    notifyEmailOnOrderUpdate: true,
+    notifyEmailOnVerification: true
   });
 
+  const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
 
-  const handleSave = (e) => {
+  useEffect(() => {
+    const fetchSettings = async () => {
+      setIsLoading(true);
+      try {
+        const data = await getSystemSettings();
+        if (data) {
+          setSettings(prev => ({ ...prev, ...data }));
+        }
+      } catch (e) {
+        console.error('Error loading settings:', e);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchSettings();
+  }, []);
+
+  const handleSave = async (e) => {
     e.preventDefault();
     setIsSaving(true);
-    setTimeout(() => {
-      setIsSaving(false);
+    try {
+      await saveSystemSettings(settings);
       toast.success('Đã lưu cấu hình hệ thống Chợ NAU thành công!');
-    }, 600);
+    } catch (err) {
+      toast.error('Lỗi khi lưu cấu hình. Đã lưu tạm vào bộ nhớ trình duyệt.');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
     <div className="max-w-4xl mx-auto space-y-6 animate-fade-in pb-12">
-      <div>
-        <h1 className="text-xl font-black text-nau-text dark:text-nau-text flex items-center gap-2">
-          <Settings className="w-6 h-6 text-nau-primary" />
-          <span>Cấu Hình & Thiết Lập Hệ Thống</span>
-        </h1>
-        <p className="text-xs text-nau-text-muted dark:text-nau-text-muted mt-1">
-          Quản lý thông số sàn, quy tắc kiểm duyệt và chính sách an toàn cho sinh viên NAU
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-xl font-black text-nau-text dark:text-nau-text flex items-center gap-2">
+            <Settings className="w-6 h-6 text-nau-primary" />
+            <span>Cấu Hình & Thiết Lập Hệ Thống</span>
+          </h1>
+          <p className="text-xs text-nau-text-muted dark:text-nau-text-muted mt-1">
+            Quản lý thông số sàn, quy tắc kiểm duyệt, thông báo email và chính sách an toàn cho sinh viên NAU
+          </p>
+        </div>
       </div>
 
       <form onSubmit={handleSave} className="space-y-6">
@@ -148,6 +179,71 @@ export const AdminSettingsPage = () => {
           </div>
         </div>
 
+        {/* Section 3: Email Notification Configuration */}
+        <div className="bg-nau-surface dark:bg-nau-background rounded-3xl border border-nau-border dark:border-nau-border p-6 shadow-sm space-y-4">
+          <h2 className="text-sm font-bold text-nau-text dark:text-nau-text flex items-center gap-2 pb-3 border-b border-slate-100 dark:border-nau-border">
+            <Mail className="w-4 h-4 text-nau-blue" />
+            <span>Cấu Hình Thông Báo Qua Email Khi Sinh Viên Không Trực Tuyến</span>
+          </h2>
+
+          <p className="text-xs text-nau-text-muted dark:text-nau-text-muted">
+            Tự động gửi email thông báo trực tiếp đến hộp thư sinh viên khi họ không online trên website:
+          </p>
+
+          <div className="space-y-3">
+            <label className="flex items-center justify-between p-3.5 rounded-2xl border border-nau-border dark:border-nau-border bg-nau-background dark:bg-nau-surface/50 cursor-pointer">
+              <div>
+                <p className="text-xs font-bold text-nau-text dark:text-nau-text">
+                  Gửi email khi có Tin nhắn mới (người nhận đang offline)
+                </p>
+                <p className="text-[11px] text-nau-text-muted dark:text-nau-text-muted">
+                  Báo cho người mua/bán biết có người nhắn tin hỏi mua sản phẩm
+                </p>
+              </div>
+              <input
+                type="checkbox"
+                checked={settings.notifyEmailOnNewMessage !== false}
+                onChange={(e) => setSettings({ ...settings, notifyEmailOnNewMessage: e.target.checked })}
+                className="w-5 h-5 rounded text-nau-primary focus:ring-nau-primary border-nau-border"
+              />
+            </label>
+
+            <label className="flex items-center justify-between p-3.5 rounded-2xl border border-nau-border dark:border-nau-border bg-nau-background dark:bg-nau-surface/50 cursor-pointer">
+              <div>
+                <p className="text-xs font-bold text-nau-text dark:text-nau-text">
+                  Gửi email khi có Đơn hàng mới hoặc Cập nhật trạng thái đơn
+                </p>
+                <p className="text-[11px] text-nau-text-muted dark:text-nau-text-muted">
+                  Thông báo xác nhận đơn, giao dịch hoàn tất hoặc hủy đơn
+                </p>
+              </div>
+              <input
+                type="checkbox"
+                checked={settings.notifyEmailOnOrderUpdate !== false}
+                onChange={(e) => setSettings({ ...settings, notifyEmailOnOrderUpdate: e.target.checked })}
+                className="w-5 h-5 rounded text-nau-primary focus:ring-nau-primary border-nau-border"
+              />
+            </label>
+
+            <label className="flex items-center justify-between p-3.5 rounded-2xl border border-nau-border dark:border-nau-border bg-nau-background dark:bg-nau-surface/50 cursor-pointer">
+              <div>
+                <p className="text-xs font-bold text-nau-text dark:text-nau-text">
+                  Gửi email khi Hồ sơ xác thực thẻ SV được Phê duyệt / Từ chối
+                </p>
+                <p className="text-[11px] text-nau-text-muted dark:text-nau-text-muted">
+                  Báo ngay cho sinh viên kết quả kiểm duyệt thẻ sinh viên NAU
+                </p>
+              </div>
+              <input
+                type="checkbox"
+                checked={settings.notifyEmailOnVerification !== false}
+                onChange={(e) => setSettings({ ...settings, notifyEmailOnVerification: e.target.checked })}
+                className="w-5 h-5 rounded text-nau-primary focus:ring-nau-primary border-nau-border"
+              />
+            </label>
+          </div>
+        </div>
+
         {/* Submit */}
         <div className="flex justify-end gap-3 pt-2">
           <Button
@@ -165,3 +261,4 @@ export const AdminSettingsPage = () => {
     </div>
   );
 };
+
