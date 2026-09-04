@@ -30,7 +30,7 @@ export const AdminDashboardPage = () => {
     setIsLoading(true);
     try {
       const s = await getAdminStats();
-      const a = getAnalyticsData();
+      const a = await getAnalyticsData();
       const u = await getAllUsers();
       setStats(s);
       setAnalytics(a);
@@ -106,15 +106,13 @@ export const AdminDashboardPage = () => {
           value={stats.totalUsers}
           subtitle="Tài khoản đăng ký"
           icon={Users}
-          trend="+18%"
           color="red"
         />
         <StatCard
           title="Đã Xác Thực"
           value={stats.verifiedUsers}
-          subtitle={`${Math.round((stats.verifiedUsers / stats.totalUsers) * 100)}% tổng số`}
+          subtitle={stats.totalUsers > 0 ? `${Math.round((stats.verifiedUsers / stats.totalUsers) * 100)}% tổng số` : '0%'}
           icon={ShieldCheck}
-          trend="+24%"
           color="emerald"
         />
         <StatCard
@@ -122,7 +120,6 @@ export const AdminDashboardPage = () => {
           value={stats.totalProducts}
           subtitle={`${stats.activeProducts} tin đang bán`}
           icon={Package}
-          trend="+12%"
           color="blue"
         />
         <StatCard
@@ -130,24 +127,21 @@ export const AdminDashboardPage = () => {
           value={stats.totalOrders}
           subtitle={`${stats.completedOrders} đơn hoàn tất`}
           icon={ShoppingCart}
-          trend="+15%"
           color="blue"
         />
         <StatCard
           title="Giá Trị Giao Dịch"
           value={formatCurrency(stats.totalRevenue)}
-          subtitle="Giao dịch thành công"
+          subtitle="Doanh thu thực tế"
           icon={Coins}
-          trend="+32%"
           color="emerald"
         />
         <StatCard
           title="Báo Cáo Vi Phạm"
           value={stats.pendingReports}
-          subtitle="Cần kiểm tra"
+          subtitle={stats.pendingReports > 0 ? 'Cần kiểm tra' : 'Hệ thống an toàn'}
           icon={AlertTriangle}
-          trendType="down"
-          color="rose"
+          color={stats.pendingReports > 0 ? 'rose' : 'emerald'}
         />
       </div>
 

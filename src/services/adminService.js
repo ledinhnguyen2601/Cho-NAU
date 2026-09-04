@@ -117,34 +117,84 @@ export const toggleUserRole = async (userId, currentRole) => {
 };
 
 /**
- * Get analytics time-series data for SaaS charts
+ * Get real analytics time-series and category data from Firestore
  */
-export const getAnalyticsData = () => {
-  // Ideally this would aggregate real data over time. For now we return mock static data 
-  // to prevent dashboard charts from breaking while backend aggregation is implemented.
-  return {
-    userGrowth: [
-      { month: 'Tháng 3', users: 120, verified: 45 },
-      { month: 'Tháng 4', users: 210, verified: 98 },
-      { month: 'Tháng 5', users: 380, verified: 190 },
-      { month: 'Tháng 6', users: 540, verified: 310 },
-      { month: 'Tháng 7', users: 790, verified: 520 },
-      { month: 'Tháng 8', users: 1120, verified: 840 },
-    ],
-    revenueByMonth: [
-      { month: 'Tháng 3', revenue: 14500000, orders: 35 },
-      { month: 'Tháng 4', revenue: 22800000, orders: 58 },
-      { month: 'Tháng 5', revenue: 38200000, orders: 92 },
-      { month: 'Tháng 6', revenue: 49000000, orders: 124 },
-      { month: 'Tháng 7', revenue: 67500000, orders: 168 },
-      { month: 'Tháng 8', revenue: 89200000, orders: 215 },
-    ],
-    categoryShare: [
-      { name: 'Laptop & Máy tính', percentage: 35, color: '#1B4D89' },
-      { name: 'Sách & Giáo trình', percentage: 25, color: '#C5221F' },
-      { name: 'Điện thoại & Tablet', percentage: 18, color: '#F59E0B' },
-      { name: 'Phụ kiện', percentage: 12, color: '#10B981' },
-      { name: 'Xe cộ & Phòng trọ', percentage: 10, color: '#64748B' },
-    ]
-  };
+export const getAnalyticsData = async () => {
+  if (!db) {
+    return {
+      revenueByMonth: [],
+      categoryShare: [],
+      hasOrdersData: false,
+      totalProducts: 0
+    };
+  }
+
+  try {
+    const [ordersSnap, productsSnap] = await Promise.all([
+      getDocs(collection(db, 'orders')).catch(() => ({ docs: [] })),
+      getDocs(collection(db, 'products')).catch(() => ({ docs: [] }))
+    ]);
+
+    const orders = ordersSnap.docs ? ordersSnap.docs.map(d => d.data()) : [];
+    const products = productsSnap.docs ? productsSnap.docs.map(d => d.data()) : [];
+
+    // Group real completed orders by month (last 6 months)
+    const now = new Date();
+    const monthsMap = {};
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const key = `Tháng ${d.getMonth() + 1}`;
+      monthsMap[key] = { month: key, revenue: 0, orders: 0 };
+    }
+
+    let hasOrdersData = false;
+    orders.forEach(order => {
+      if (order.status === 'completed' && order.createdAt) {
+        const orderDate = new Date(order.createdAt);
+        const key = `Tháng ${orderDate.getMonth() + 1}`;
+        if (monthsMap[key]) {
+          monthsMap[key].revenue += Number(order.totalPrice || 0);
+          monthsMap[key].orders += 1;
+          hasOrdersData = true;
+        }
+      }
+    });
+
+    const revenueByMonth = Object.values(monthsMap);
+
+    // Compute real category distribution from products
+    const totalProducts = products.length;
+    let categoryShare = [];
+    if (totalProducts > 0) {
+      const catCount = {};
+      products.forEach(p => {
+        const cat = p.categoryName || p.category || 'Khác';
+        catCount[cat] = (catCount[cat] || 0) + 1;
+      });
+
+      const colors = ['#C5221F', '#1B4D89', '#F59E0B', '#10B981', '#6366F1', '#EC4899', '#64748B'];
+      let colorIdx = 0;
+      categoryShare = Object.entries(catCount).map(([name, count]) => {
+        const percentage = Math.round((count / totalProducts) * 100);
+        const color = colors[colorIdx % colors.length];
+        colorIdx++;
+        return { name, count, percentage, color };
+      });
+    }
+
+    return {
+      revenueByMonth,
+      categoryShare,
+      hasOrdersData,
+      totalProducts
+    };
+  } catch (error) {
+    console.error("Error computing real analytics:", error);
+    return {
+      revenueByMonth: [],
+      categoryShare: [],
+      hasOrdersData: false,
+      totalProducts: 0
+    };
+  }
 };
