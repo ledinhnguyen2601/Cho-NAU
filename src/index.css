@@ -1,0 +1,147 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Brand NAU Red (Primary University Identity - Chữ A, ngọn lửa NAU) */
+    --color-nau-red: #C5221F;
+    --color-nau-red-hover: #A51C24;
+    --color-nau-red-light: #FDF2F2;
+    --color-nau-red-dark: #881318;
+
+    /* Brand NAU Blue (Secondary University Identity - Chữ N, U, viền tròn logo) */
+    --color-nau-blue: #1B4D89;
+    --color-nau-blue-hover: #133E6C;
+    --color-nau-blue-light: #EBF3FC;
+    --color-nau-blue-dark: #0C2B4D;
+
+    /* Semantic Aliases - Primary maps to NAU Red */
+    --color-primary: var(--color-nau-red);
+    --color-primary-hover: var(--color-nau-red-hover);
+    --color-primary-light: var(--color-nau-red-light);
+    --color-primary-dark: var(--color-nau-red-dark);
+
+    --color-secondary: var(--color-nau-blue);
+    --color-secondary-hover: var(--color-nau-blue-hover);
+    --color-secondary-light: var(--color-nau-blue-light);
+    --color-secondary-dark: var(--color-nau-blue-dark);
+
+    /* Backgrounds & Surfaces - Clean Collegiate Neutrals */
+    --color-bg-primary: #f8fafc;
+    --color-bg-card: #ffffff;
+    --color-border: #e2e8f0;
+
+    /* Typography */
+    --color-text-main: #0f172a;
+    --color-text-secondary: #475569;
+    --color-text-muted: #64748b;
+    
+    /* Functional Status */
+    --color-success: #10b981;
+    --color-warning: #f59e0b;
+    --color-danger: #dc2626;
+    --color-info: #1B4D89;
+  }
+
+  .dark {
+    /* Brand NAU Red - Dark Mode */
+    --color-nau-red: #e03531; 
+    --color-nau-red-hover: #f0524f;
+    --color-nau-red-light: #3d1214;
+    --color-nau-red-dark: #7f1d1d;
+
+    /* Brand NAU Blue - Dark Mode */
+    --color-nau-blue: #3b82f6; 
+    --color-nau-blue-hover: #60a5fa;
+    --color-nau-blue-light: #172554;
+    --color-nau-blue-dark: #1e40af;
+
+    /* Semantic Aliases */
+    --color-primary: var(--color-nau-red);
+    --color-primary-hover: var(--color-nau-red-hover);
+    --color-primary-light: var(--color-nau-red-light);
+    --color-primary-dark: var(--color-nau-red-dark);
+
+    --color-secondary: var(--color-nau-blue);
+    --color-secondary-hover: var(--color-nau-blue-hover);
+    --color-secondary-light: var(--color-nau-blue-light);
+    --color-secondary-dark: var(--color-nau-blue-dark);
+
+    /* Backgrounds & Surfaces - Dark Neutral Slate */
+    --color-bg-primary: #0b0f19;
+    --color-bg-card: #131926;
+    --color-border: #1e293b;
+
+    /* Typography */
+    --color-text-main: #f8fafc;
+    --color-text-secondary: #cbd5e1;
+    --color-text-muted: #94a3b8;
+    
+    /* Status */
+    --color-success: #10b981;
+    --color-warning: #f59e0b;
+    --color-danger: #ef4444;
+    --color-info: #3b82f6;
+  }
+
+  body {
+    font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    background-color: var(--color-bg-primary);
+    color: var(--color-text-main);
+  }
+}
+
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 9999px;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: #334155;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: #475569;
+}
+
+/* Glassmorphism Classes */
+.glass {
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.dark .glass {
+  background: rgba(19, 27, 46, 0.8);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+/* Animations & Transitions */
+.transition-smooth {
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Badge Glow Effect */
+.glow-primary {
+  box-shadow: 0 0 15px -3px rgba(197, 34, 31, 0.25);
+}
+
+.glow-emerald {
+  box-shadow: 0 0 15px -3px rgba(16, 185, 129, 0.35);
+}

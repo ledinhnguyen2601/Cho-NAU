@@ -1,0 +1,118 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    function getUserData() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+    
+    function isAdmin() {
+      return isAuthenticated() && getUserData().role == 'admin';
+    }
+    
+    function isVerifiedUser() {
+      return isAuthenticated() && getUserData().verificationStatus == 'verified';
+    }
+    
+    function isNotSuspended() {
+      return isAuthenticated() && getUserData().status != 'suspended';
+    }
+
+    // 1. Users collection
+    match /users/{userId} {
+      // Any authenticated user can read public profile of other students
+      allow read: if isAuthenticated();
+      // User can create their initial record upon signup
+      allow create: if isAuthenticated() && request.auth.uid == userId;
+      // User can edit their own contact info; Admin can edit roles/status/verifications
+      allow update: if (isOwner(userId) && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['role', 'verificationStatus']))) || isAdmin();
+      // Only Admin can delete user
+      allow delete: if isAdmin();
+    }
+
+    // 2. Products collection
+    match /products/{productId} {
+      // Anyone can browse active listings
+      allow read: if true;
+      // Only verified, active students can create listings
+      allow create: if isVerifiedUser() && isNotSuspended() && request.resource.data.sellerId == request.auth.uid;
+      // Seller can update their listing; Admin can update status/delete
+      allow update: if (isAuthenticated() && resource.data.sellerId == request.auth.uid && isNotSuspended()) || isAdmin();
+      // Seller or Admin can delete
+      allow delete: if (isAuthenticated() && resource.data.sellerId == request.auth.uid) || isAdmin();
+    }
+
+    // 3. Orders collection
+    match /orders/{orderId} {
+      // Buyer, Seller, or Admin can read order
+      allow read: if isAuthenticated() && (
+        resource.data.buyerId == request.auth.uid || 
+        resource.data.sellerId == request.auth.uid || 
+        isAdmin()
+      );
+      // Verified buyers can place orders
+      allow create: if isVerifiedUser() && isNotSuspended() && request.resource.data.buyerId == request.auth.uid;
+      // Buyer and Seller can update status transitions (confirmed, completed, cancelled)
+      allow update: if isAuthenticated() && (
+        resource.data.buyerId == request.auth.uid || 
+        resource.data.sellerId == request.auth.uid || 
+        isAdmin()
+      );
+    }
+
+    // 4. Conversations & Messages
+    match /conversations/{conversationId} {
+      // Participants or Admin can read conversation
+      allow read: if isAuthenticated() && (
+        resource.data.buyerId == request.auth.uid || 
+        resource.data.sellerId == request.auth.uid || 
+        isAdmin()
+      );
+      // Verified users can start conversations
+      allow create: if isVerifiedUser() && isNotSuspended();
+      allow update: if isAuthenticated() && (
+        resource.data.buyerId == request.auth.uid || 
+        resource.data.sellerId == request.auth.uid
+      );
+
+      // Subcollection messages
+      match /messages/{messageId} {
+        allow read: if isAuthenticated();
+        allow create: if isVerifiedUser() && isNotSuspended() && request.resource.data.senderId == request.auth.uid;
+      }
+    }
+
+    // 5. Ratings & Reviews
+    match /ratings/{ratingId} {
+      allow read: if true;
+      allow create: if isVerifiedUser() && isNotSuspended() && request.resource.data.reviewerId == request.auth.uid;
+      allow update, delete: if isAdmin();
+    }
+
+    // 6. Reports
+    match /reports/{reportId} {
+      allow read, update, delete: if isAdmin();
+      allow create: if isAuthenticated() && request.resource.data.reporterId == request.auth.uid;
+    }
+
+    // 7. Categories & Settings
+    match /categories/{categoryId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /settings/{settingId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+  }
+}

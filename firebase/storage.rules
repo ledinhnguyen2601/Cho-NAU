@@ -1,0 +1,33 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    
+    // Product image storage
+    match /products/{allPaths=**} {
+      // Public read access for browsing product images
+      allow read: if true;
+      // Authenticated users can upload product photos <= 5MB and must be image type
+      allow write: if request.auth != null &&
+        request.resource.size < 5 * 1024 * 1024 &&
+        request.resource.contentType.matches('image/.*');
+    }
+
+    // Student ID / CCCD Verification document storage
+    match /verifications/{allPaths=**} {
+      // Only authenticated user or admin can read document photos
+      allow read: if request.auth != null;
+      // Authenticated users can upload their verification document <= 5MB
+      allow write: if request.auth != null &&
+        request.resource.size < 5 * 1024 * 1024 &&
+        request.resource.contentType.matches('image/.*');
+    }
+
+    // Avatar uploads
+    match /avatars/{userId}/{allPaths=**} {
+      allow read: if true;
+      allow write: if request.auth != null && request.auth.uid == userId &&
+        request.resource.size < 2 * 1024 * 1024 &&
+        request.resource.contentType.matches('image/.*');
+    }
+  }
+}
