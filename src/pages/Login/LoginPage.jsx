@@ -13,13 +13,12 @@ import {
 } from 'lucide-react';
 
 export const LoginPage = () => {
-  const { signInWithGoogle, signInWithFacebook } = useAuth();
+  const { signInWithGoogle } = useAuth();
   const toast = useToast();
   const navigate = useNavigate();
   const location = useLocation();
 
   const [isLoadingGoogle, setIsLoadingGoogle] = useState(false);
-  const [isLoadingFacebook, setIsLoadingFacebook] = useState(false);
 
   const from = location.state?.from?.pathname || '/';
 
@@ -33,19 +32,6 @@ export const LoginPage = () => {
       toast.error('Đăng nhập Google thất bại: ' + (err.message || 'Lỗi'));
     } finally {
       setIsLoadingGoogle(false);
-    }
-  };
-
-  const handleFacebookLogin = async () => {
-    setIsLoadingFacebook(true);
-    try {
-      await signInWithFacebook();
-      toast.success('Đăng nhập bằng Facebook thành công!');
-      navigate(from, { replace: true });
-    } catch (err) {
-      toast.error('Đăng nhập Facebook thất bại: ' + (err.message || 'Lỗi'));
-    } finally {
-      setIsLoadingFacebook(false);
     }
   };
 
@@ -98,17 +84,6 @@ export const LoginPage = () => {
               />
             </svg>
             <span>Đăng nhập với Google (@nau.edu.vn hoặc Gmail)</span>
-          </button>
-
-          <button
-            onClick={handleFacebookLogin}
-            disabled={isLoadingFacebook}
-            className="w-full flex items-center justify-center gap-3 py-3 px-4 rounded-xl bg-[#1877F2] hover:bg-[#166fe5] text-white font-bold text-xs transition-all shadow-sm active:scale-[0.98]"
-          >
-            <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
-              <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
-            </svg>
-            <span>Đăng nhập với Facebook</span>
           </button>
         </div>
 
