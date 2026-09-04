@@ -1,3 +1,5 @@
+// File: src/config/firebase.js
+import { initializeApp, getApps, getApp } from 'firebase/app';
 import { 
   getAuth, 
   GoogleAuthProvider, 

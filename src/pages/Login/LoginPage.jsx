@@ -25,10 +25,13 @@ export const LoginPage = () => {
   const handleGoogleLogin = async () => {
     setIsLoadingGoogle(true);
     try {
-      await signInWithGoogle();
-      toast.success('Đăng nhập bằng Google thành công!');
-      navigate(from, { replace: true });
+      const user = await signInWithGoogle();
+      if (user) {
+        toast.success('Đăng nhập bằng Google thành công!');
+        navigate(from, { replace: true });
+      }
     } catch (err) {
+      console.error('Google login error:', err);
       toast.error('Đăng nhập Google thất bại: ' + (err.message || 'Lỗi'));
     } finally {
       setIsLoadingGoogle(false);
