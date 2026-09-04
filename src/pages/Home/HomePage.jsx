@@ -21,6 +21,7 @@ import {
   Shirt, 
   Package,
   SlidersHorizontal,
+  LayoutGrid,
   X
 } from 'lucide-react';
 
@@ -168,26 +169,59 @@ export const HomePage = () => {
         <div className="flex items-center justify-between">
           <h2 className="text-base font-bold text-nau-text dark:text-nau-text flex items-center gap-2">
             <Sparkles className="w-4 h-4 text-nau-red" />
-            <span>Danh Mục Nổi Bật</span>
+            <span>Danh Mục Sản Phẩm</span>
           </h2>
           <button
-            onClick={() => handleCategorySelect('all')}
-            className="text-xs font-bold text-nau-red dark:text-nau-red-hover hover:underline"
+            onClick={() => {
+              handleCategorySelect('all');
+              const el = document.getElementById('marketplace-products');
+              if (el) el.scrollIntoView({ behavior: 'smooth' });
+            }}
+            className="text-xs font-bold text-nau-red dark:text-nau-red-hover hover:underline flex items-center gap-1 cursor-pointer"
           >
-            Tất cả danh mục
+            <span>Tất cả danh mục</span>
+            <ArrowRight className="w-3.5 h-3.5" />
           </button>
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
+          {/* Card: Tất cả sản phẩm */}
+          <button
+            onClick={() => handleCategorySelect('all')}
+            className={`flex items-center gap-3 p-3 rounded-2xl border transition-all text-left group cursor-pointer ${
+              filters.category === 'all' || !filters.category
+                ? 'bg-nau-red text-white border-nau-red shadow-md shadow-nau-red/20'
+                : 'bg-nau-surface dark:bg-nau-background border-nau-border/80 dark:border-nau-border text-nau-text dark:text-nau-text-secondary hover:border-nau-red/40 hover:shadow-xs'
+            }`}
+          >
+            <div
+              className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 transition-colors ${
+                filters.category === 'all' || !filters.category
+                  ? 'bg-white/20 text-white'
+                  : 'bg-nau-red-light dark:bg-nau-red-dark/20 text-nau-red dark:text-nau-red-hover group-hover:bg-nau-red group-hover:text-white'
+              }`}
+            >
+              <LayoutGrid className="w-5 h-5" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-xs font-bold truncate leading-tight">
+                Tất cả sản phẩm
+              </p>
+              <p className={`text-[10px] ${filters.category === 'all' || !filters.category ? 'text-white/80' : 'text-slate-400'}`}>
+                Toàn bộ tin đăng
+              </p>
+            </div>
+          </button>
+
           {INITIAL_CATEGORIES.map((cat) => {
-            const Icon = iconMap[cat.icon] || Package;
+            const IconComponent = typeof cat.icon === 'function' ? cat.icon : (iconMap[cat.icon] || Package);
             const isSelected = filters.category === cat.id;
 
             return (
               <button
                 key={cat.id}
                 onClick={() => handleCategorySelect(cat.id)}
-                className={`flex items-center gap-3 p-3 rounded-2xl border transition-all text-left group ${
+                className={`flex items-center gap-3 p-3 rounded-2xl border transition-all text-left group cursor-pointer ${
                   isSelected
                     ? 'bg-nau-red text-white border-nau-red shadow-md shadow-nau-red/20'
                     : 'bg-nau-surface dark:bg-nau-background border-nau-border/80 dark:border-nau-border text-nau-text dark:text-nau-text-secondary hover:border-nau-red/40 hover:shadow-xs'
@@ -200,14 +234,14 @@ export const HomePage = () => {
                       : 'bg-nau-red-light dark:bg-nau-red-dark/20 text-nau-red dark:text-nau-red-hover group-hover:bg-nau-red group-hover:text-white'
                   }`}
                 >
-                  <Icon className="w-5 h-5" />
+                  <IconComponent className="w-5 h-5" />
                 </div>
                 <div className="min-w-0">
                   <p className="text-xs font-bold truncate leading-tight">
                     {cat.name}
                   </p>
                   <p className={`text-[10px] ${isSelected ? 'text-white/80' : 'text-slate-400'}`}>
-                    {cat.count} tin đăng
+                    Danh mục NAU
                   </p>
                 </div>
               </button>
@@ -217,7 +251,7 @@ export const HomePage = () => {
       </section>
 
       {/* Main Marketplace Content: Filter Sidebar + Products Grid */}
-      <section className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+      <section id="marketplace-products" className="grid grid-cols-1 lg:grid-cols-4 gap-8">
         
         {/* Desktop Filter Sidebar */}
         <div className="hidden lg:block lg:col-span-1">

@@ -14,6 +14,11 @@ import {
   isFirebaseConfigured
 } from '../config/firebase';
 
+const ADMIN_EMAILS = [
+  'tomvnj37@gmail.com',
+  'admin@nau.edu.vn'
+];
+
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
@@ -31,12 +36,26 @@ export const AuthProvider = ({ children }) => {
     const unsubscribe = onAuthStateChanged(auth, async (fbUser) => {
       if (fbUser) {
         try {
+          const userEmail = (fbUser.email || '').toLowerCase();
+          const isDefaultAdmin = ADMIN_EMAILS.includes(userEmail);
+
           // Fetch user profile from Firestore
           const userDocRef = doc(db, 'users', fbUser.uid);
           const userSnap = await getDoc(userDocRef);
 
           if (userSnap.exists()) {
-            setCurrentUser({ id: fbUser.uid, ...userSnap.data() });
+            const data = userSnap.data();
+            // Automatically upgrade white-listed admin to 'admin' and 'verified'
+            if (isDefaultAdmin && (data.role !== 'admin' || data.verificationStatus !== 'verified')) {
+              data.role = 'admin';
+              data.verificationStatus = 'verified';
+              try {
+                await setDoc(userDocRef, { role: 'admin', verificationStatus: 'verified' }, { merge: true });
+              } catch (e) {
+                console.warn('Could not sync admin role to Firestore:', e);
+              }
+            }
+            setCurrentUser({ id: fbUser.uid, ...data });
           } else {
             // New user registration in Firestore
             const newUser = {
@@ -44,11 +63,11 @@ export const AuthProvider = ({ children }) => {
               name: fbUser.displayName || 'Sinh viên NAU',
               email: fbUser.email,
               avatar: fbUser.photoURL || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
-              role: 'user',
-              verificationStatus: 'new', // new | pending_verification | verified | rejected | suspended
+              role: isDefaultAdmin ? 'admin' : 'user',
+              verificationStatus: isDefaultAdmin ? 'verified' : 'new', // new | pending_verification | verified | rejected | suspended
               verificationDocument: null,
               faculty: 'Đại học Nghệ An',
-              studentId: '',
+              studentId: isDefaultAdmin ? 'ADMIN-NAU' : '',
               rating: 5.0,
               ratingCount: 0,
               status: 'active',
@@ -125,9 +144,9 @@ export const AuthProvider = ({ children }) => {
     });
   };
 
-  const isVerified = currentUser?.verificationStatus === 'verified';
-  const isPending = currentUser?.verificationStatus === 'pending_verification';
-  const isAdmin = currentUser?.role === 'admin';
+  const isAdmin = currentUser?.role === 'admin' || (Boolean(currentUser?.email) && ADMIN_EMAILS.includes(currentUser.email.toLowerCase()));
+  const isVerified = currentUser?.verificationStatus === 'verified' || isAdmin;
+  const isPending = !isAdmin && currentUser?.verificationStatus === 'pending_verification';
   const isSuspended = currentUser?.status === 'suspended';
 
   const value = {

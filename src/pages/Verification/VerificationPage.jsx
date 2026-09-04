@@ -8,6 +8,7 @@ import { uploadVerificationDocument } from '../../services/storageService';
 import { validateImageFile } from '../../utils/validators';
 import { Button } from '../../components/common/Button';
 import { Input } from '../../components/common/Input';
+import { NAU_FACULTIES } from '../../config/constants';
 import { 
   ShieldCheck, 
   Clock, 
@@ -26,8 +27,16 @@ export const VerificationPage = () => {
   const toast = useToast();
   const navigate = useNavigate();
 
+  const isExistingInList = currentUser?.faculty && NAU_FACULTIES.includes(currentUser.faculty);
   const [studentId, setStudentId] = useState(currentUser?.studentId || '');
-  const [faculty, setFaculty] = useState(currentUser?.faculty || 'Khoa Công Nghệ Thông Tin');
+  const [faculty, setFaculty] = useState(
+    currentUser?.faculty 
+      ? (isExistingInList ? currentUser.faculty : 'Khác (Tự nhập tay)')
+      : (NAU_FACULTIES[0] || 'Khoa Công Nghệ Thông Tin')
+  );
+  const [customFaculty, setCustomFaculty] = useState(
+    currentUser?.faculty && !isExistingInList ? currentUser.faculty : ''
+  );
   const [phone, setPhone] = useState(currentUser?.phone || '');
   const [docFile, setDocFile] = useState(null);
   const [docPreview, setDocPreview] = useState(currentUser?.verificationDocument || null);
@@ -80,6 +89,15 @@ export const VerificationPage = () => {
       return;
     }
 
+    if (faculty === 'Khác (Tự nhập tay)' && !customFaculty.trim()) {
+      toast.error('Vui lòng nhập tên Khoa / Ngành của bạn!');
+      return;
+    }
+
+    const finalFaculty = faculty === 'Khác (Tự nhập tay)'
+      ? customFaculty.trim()
+      : faculty;
+
     setIsSubmitting(true);
     try {
       let finalDocUrl = docPreview;
@@ -89,14 +107,14 @@ export const VerificationPage = () => {
 
       await submitVerification(currentUser.id, {
         studentId: studentId.trim(),
-        faculty,
+        faculty: finalFaculty,
         phone: phone.trim(),
         documentUrl: finalDocUrl
       });
 
       updateUserProfile({
         studentId: studentId.trim(),
-        faculty,
+        faculty: finalFaculty,
         phone: phone.trim(),
         verificationDocument: finalDocUrl,
         verificationStatus: 'pending_verification'
@@ -227,13 +245,22 @@ export const VerificationPage = () => {
                 onChange={(e) => setFaculty(e.target.value)}
                 className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-nau-border dark:border-nau-border bg-nau-surface dark:bg-nau-background text-nau-text dark:text-nau-text"
               >
-                <option value="Khoa Công Nghệ Thông Tin">Khoa Công Nghệ Thông Tin</option>
-                <option value="Khoa Ngoại Ngữ">Khoa Ngoại Ngữ</option>
-                <option value="Khoa Kinh Tế & Quản Trị">Khoa Kinh Tế & Quản Trị</option>
-                <option value="Khoa Kỹ Thuật & Công Nghệ">Khoa Kỹ Thuật & Công Nghệ</option>
-                <option value="Khoa Sư Phạm">Khoa Sư Phạm</option>
-                <option value="Khoa Nông Lâm Ngư">Khoa Nông Lâm Ngư</option>
+                {NAU_FACULTIES.map((f) => (
+                  <option key={f} value={f}>{f}</option>
+                ))}
               </select>
+
+              {faculty === 'Khác (Tự nhập tay)' && (
+                <div className="mt-3 animate-fade-in">
+                  <Input
+                    label="Tên Khoa / Ngành / Viện của bạn"
+                    required
+                    placeholder="Ví dụ: Khoa Kinh Tế - Lớp K62 QTKD..."
+                    value={customFaculty}
+                    onChange={(e) => setCustomFaculty(e.target.value)}
+                  />
+                </div>
+              )}
             </div>
 
             {/* Document upload box */}

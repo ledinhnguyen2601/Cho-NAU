@@ -65,7 +65,6 @@ export const ProductFilters = ({
               }`}
             >
               <span className="truncate">{cat.name}</span>
-              <span className="text-[10px] text-slate-400 font-semibold">{cat.count}</span>
             </button>
           ))}
         </div>

@@ -138,6 +138,17 @@ export const Navbar = () => {
               )}
             </Link>
 
+            {/* Admin Quick Action */}
+            {isAdmin && (
+              <Link
+                to="/admin"
+                className="hidden sm:inline-flex items-center gap-1.5 px-3 py-2 bg-nau-blue hover:bg-nau-blue-hover text-white text-xs font-bold rounded-xl shadow-sm transition-all"
+              >
+                <LayoutDashboard className="w-4 h-4" />
+                <span>QUẢN TRỊ</span>
+              </Link>
+            )}
+
             {/* Post Listing CTA */}
             <button
               onClick={handlePostListingClick}
@@ -152,7 +163,7 @@ export const Navbar = () => {
               <div className="relative">
                 <button
                   onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-                  className="flex items-center gap-2 p-1 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors border border-transparent hover:border-nau-border dark:hover:border-slate-700"
+                  className="flex items-center gap-2 p-1 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors border border-transparent hover:border-nau-border dark:border-slate-700"
                 >
                   <div className="relative">
                     <img
@@ -179,7 +190,11 @@ export const Navbar = () => {
                           <p className="text-sm font-bold text-nau-text dark:text-nau-text truncate">
                             {currentUser.name}
                           </p>
-                          {isVerified ? (
+                          {isAdmin ? (
+                            <span className="text-[10px] px-2 py-0.5 bg-nau-red/10 text-nau-red font-bold rounded-full border border-nau-red/30">
+                              👑 Quản trị viên
+                            </span>
+                          ) : isVerified ? (
                             <span className="text-[10px] px-2 py-0.5 bg-nau-blue-light dark:bg-nau-blue/20 text-nau-blue dark:text-nau-blue-light font-bold rounded-full border border-nau-blue/30 dark:border-nau-blue/40">
                               ✓ Đã xác thực
                             </span>
@@ -202,7 +217,7 @@ export const Navbar = () => {
                             className="flex items-center gap-2 px-3 py-2 rounded-xl text-nau-red dark:text-nau-red-hover hover:bg-nau-red-light dark:hover:bg-nau-red-dark/20 font-semibold"
                           >
                             <LayoutDashboard className="w-4 h-4" />
-                            <span>Admin SaaS Dashboard</span>
+                            <span>👑 Quản Trị Hệ Thống (Admin)</span>
                           </Link>
                         )}
                         <Link
