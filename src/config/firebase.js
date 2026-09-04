@@ -38,13 +38,19 @@ import {
   deleteObject 
 } from 'firebase/storage';
 
+const cleanVal = (val, fallback = '') => {
+  if (!val) return fallback;
+  const cleaned = String(val).replace(/^["']|["']$/g, '').trim();
+  return cleaned || fallback;
+};
+
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || '',
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || '',
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || '',
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || '',
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || '',
-  appId: import.meta.env.VITE_FIREBASE_APP_ID || ''
+  apiKey: cleanVal(import.meta.env.VITE_FIREBASE_API_KEY, 'AIzaSyDaniB9O6p8gAMElUHibh7W1g6RsjWuTT4'),
+  authDomain: cleanVal(import.meta.env.VITE_FIREBASE_AUTH_DOMAIN, 'cho-46dd0.firebaseapp.com'),
+  projectId: cleanVal(import.meta.env.VITE_FIREBASE_PROJECT_ID, 'cho-46dd0'),
+  storageBucket: cleanVal(import.meta.env.VITE_FIREBASE_STORAGE_BUCKET, 'cho-46dd0.firebasestorage.app'),
+  messagingSenderId: cleanVal(import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID, '327803265432'),
+  appId: cleanVal(import.meta.env.VITE_FIREBASE_APP_ID, '1:327803265432:web:c5ed2547158a550d0d4bed')
 };
 
 // Check if valid Firebase configuration is present
@@ -75,6 +81,7 @@ if (isFirebaseConfigured) {
 
 // Providers
 export const googleProvider = new GoogleAuthProvider();
+googleProvider.setCustomParameters({ prompt: 'select_account' });
 export const facebookProvider = new FacebookAuthProvider();
 
 export { 
