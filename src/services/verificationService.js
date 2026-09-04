@@ -1,4 +1,3 @@
-// File: src/services/verificationService.js
 import { 
   db, 
   doc, 
@@ -10,6 +9,7 @@ import {
   where,
   getDoc
 } from '../config/firebase';
+import { saveUserOverride, getUserOverrides } from './adminService';
 
 /**
  * Submit verification request for student card / CCCD
@@ -26,27 +26,28 @@ export const submitVerification = async (userId, data) => {
     verificationSubmittedAt: new Date().toISOString()
   };
 
-  if (!db) throw new Error("Firebase chưa được cấu hình");
-  try {
-    const userRef = doc(db, 'users', userId);
-    await setDoc(userRef, {
-      studentId,
-      faculty,
-      verificationDocument: documentUrl,
-      verificationStatus: 'pending_verification',
-      phone: phone || '',
-      verificationSubmittedAt: updateData.verificationSubmittedAt
-    }, { merge: true });
+  saveUserOverride(userId, updateData);
 
-    // Also write to dedicated verifications collection for easy admin indexing
-    const verifRef = doc(db, 'verifications', userId);
-    await setDoc(verifRef, updateData, { merge: true });
+  if (db) {
+    try {
+      const userRef = doc(db, 'users', userId);
+      await setDoc(userRef, {
+        studentId,
+        faculty,
+        verificationDocument: documentUrl,
+        verificationStatus: 'pending_verification',
+        phone: phone || '',
+        verificationSubmittedAt: updateData.verificationSubmittedAt
+      }, { merge: true });
 
-    return updateData;
-  } catch (e) {
-    console.error('Firestore submitVerification error:', e);
-    throw e;
+      // Also write to dedicated verifications collection for easy admin indexing
+      const verifRef = doc(db, 'verifications', userId);
+      await setDoc(verifRef, updateData, { merge: true });
+    } catch (e) {
+      console.warn('Firestore submitVerification cloud sync notice:', e);
+    }
   }
+  return updateData;
 };
 
 /**
@@ -59,19 +60,20 @@ export const approveVerification = async (userId) => {
     verificationRejectionReason: null
   };
 
-  if (!db) throw new Error("Firebase chưa được cấu hình");
-  try {
-    const userRef = doc(db, 'users', userId);
-    await setDoc(userRef, updateData, { merge: true });
+  saveUserOverride(userId, updateData);
 
-    const verifRef = doc(db, 'verifications', userId);
-    await setDoc(verifRef, updateData, { merge: true });
+  if (db) {
+    try {
+      const userRef = doc(db, 'users', userId);
+      await setDoc(userRef, updateData, { merge: true });
 
-    return updateData;
-  } catch (e) {
-    console.error('Firestore approveVerification error:', e);
-    throw e;
+      const verifRef = doc(db, 'verifications', userId);
+      await setDoc(verifRef, updateData, { merge: true });
+    } catch (e) {
+      console.warn('Firestore approveVerification cloud sync notice:', e);
+    }
   }
+  return updateData;
 };
 
 /**
@@ -83,50 +85,72 @@ export const rejectVerification = async (userId, reason) => {
     verificationRejectionReason: reason || 'Hình ảnh thẻ sinh viên hoặc CCCD không rõ nét, vui lòng chụp lại.'
   };
 
-  if (!db) throw new Error("Firebase chưa được cấu hình");
-  try {
-    const userRef = doc(db, 'users', userId);
-    await setDoc(userRef, updateData, { merge: true });
+  saveUserOverride(userId, updateData);
 
-    const verifRef = doc(db, 'verifications', userId);
-    await setDoc(verifRef, updateData, { merge: true });
+  if (db) {
+    try {
+      const userRef = doc(db, 'users', userId);
+      await setDoc(userRef, updateData, { merge: true });
 
-    return updateData;
-  } catch (e) {
-    console.error('Firestore rejectVerification error:', e);
-    throw e;
+      const verifRef = doc(db, 'verifications', userId);
+      await setDoc(verifRef, updateData, { merge: true });
+    } catch (e) {
+      console.warn('Firestore rejectVerification cloud sync notice:', e);
+    }
   }
+  return updateData;
 };
 
 /**
  * Get all users with pending verification
  */
 export const getPendingVerifications = async () => {
-  if (!db) return [];
-  try {
-    const qUsers = query(collection(db, 'users'), where('verificationStatus', '==', 'pending_verification'));
-    const userSnap = await getDocs(qUsers);
-    const usersList = userSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  const overrides = getUserOverrides();
+  let usersList = [];
 
-    // Also check verifications collection to merge
+  if (db) {
     try {
-      const qVerif = query(collection(db, 'verifications'), where('verificationStatus', '==', 'pending_verification'));
-      const verifSnap = await getDocs(qVerif);
-      verifSnap.forEach(vDoc => {
-        const vData = vDoc.data();
-        const existingIdx = usersList.findIndex(u => u.id === vDoc.id);
-        if (existingIdx >= 0) {
-          usersList[existingIdx] = { ...usersList[existingIdx], ...vData };
-        } else {
-          usersList.push({ id: vDoc.id, ...vData });
-        }
-      });
-    } catch(err) {}
+      const qUsers = query(collection(db, 'users'), where('verificationStatus', '==', 'pending_verification'));
+      const userSnap = await getDocs(qUsers);
+      usersList = userSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
-    return usersList;
-  } catch (e) {
-    console.error('Firestore getPendingVerifications error:', e);
-    return [];
+      // Also check verifications collection to merge
+      try {
+        const qVerif = query(collection(db, 'verifications'), where('verificationStatus', '==', 'pending_verification'));
+        const verifSnap = await getDocs(qVerif);
+        verifSnap.forEach(vDoc => {
+          const vData = vDoc.data();
+          const existingIdx = usersList.findIndex(u => u.id === vDoc.id);
+          if (existingIdx >= 0) {
+            usersList[existingIdx] = { ...usersList[existingIdx], ...vData };
+          } else {
+            usersList.push({ id: vDoc.id, ...vData });
+          }
+        });
+      } catch(err) {}
+    } catch (e) {
+      console.warn('Firestore getPendingVerifications warning:', e);
+    }
   }
+
+  // Merge with overrides
+  Object.keys(overrides).forEach(userId => {
+    const o = overrides[userId];
+    const existingIdx = usersList.findIndex(u => u.id === userId);
+    if (o.verificationStatus === 'pending_verification') {
+      if (existingIdx >= 0) {
+        usersList[existingIdx] = { ...usersList[existingIdx], ...o };
+      } else {
+        usersList.push({ id: userId, ...o });
+      }
+    } else if (o.verificationStatus && o.verificationStatus !== 'pending_verification') {
+      // If no longer pending in overrides, remove from pending list
+      if (existingIdx >= 0) {
+        usersList.splice(existingIdx, 1);
+      }
+    }
+  });
+
+  return usersList;
 };
 

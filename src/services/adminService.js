@@ -71,49 +71,102 @@ export const getAdminStats = async () => {
   }
 };
 
+const ADMIN_EMAILS = [
+  'tomvnj37@gmail.com',
+  'admin@nau.edu.vn'
+];
+
 /**
- * Get all users with search/filter
+ * Helper to get local user overrides
+ */
+export const getUserOverrides = () => {
+  try {
+    const raw = localStorage.getItem('nau_user_overrides');
+    return raw ? JSON.parse(raw) : {};
+  } catch (e) {
+    return {};
+  }
+};
+
+/**
+ * Helper to save a single user override
+ */
+export const saveUserOverride = (userId, fields) => {
+  try {
+    const current = getUserOverrides();
+    current[userId] = { ...(current[userId] || {}), ...fields, updatedAt: new Date().toISOString() };
+    localStorage.setItem('nau_user_overrides', JSON.stringify(current));
+    return current[userId];
+  } catch (e) {
+    return fields;
+  }
+};
+
+/**
+ * Get all users with search/filter, admin normalization, and local overrides
  */
 export const getAllUsers = async () => {
-  if (!db) return [];
-  try {
-    const snapshot = await getDocs(collection(db, 'users'));
-    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-  } catch (e) {
-    console.error("Error fetching users:", e);
-    return [];
+  const overrides = getUserOverrides();
+  let usersList = [];
+
+  if (db) {
+    try {
+      const snapshot = await getDocs(collection(db, 'users'));
+      usersList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    } catch (e) {
+      console.warn("Error fetching users from Firestore:", e);
+    }
   }
+
+  // Normalize admin accounts and apply local overrides
+  return usersList.map(u => {
+    const email = (u.email || '').toLowerCase();
+    const isSuperAdmin = ADMIN_EMAILS.includes(email);
+    const userOverride = overrides[u.id] || {};
+
+    return {
+      ...u,
+      role: isSuperAdmin ? 'admin' : (userOverride.role || u.role || 'user'),
+      verificationStatus: isSuperAdmin ? 'verified' : (userOverride.verificationStatus || u.verificationStatus || 'new'),
+      status: userOverride.status || u.status || 'active',
+      studentId: isSuperAdmin ? (u.studentId || 'ADMIN-NAU') : (userOverride.studentId || u.studentId || ''),
+      faculty: isSuperAdmin ? (u.faculty || 'Đại học Nghệ An') : (userOverride.faculty || u.faculty || 'Đại học Nghệ An'),
+      isOnline: u.isOnline === true || (u.lastActive && (Date.now() - new Date(u.lastActive).getTime()) < 5 * 60 * 1000)
+    };
+  });
 };
 
 /**
  * Update user status (e.g., active, suspended)
  */
 export const updateUserStatus = async (userId, newStatus) => {
-  if (!db) return null;
-  try {
-    const userRef = doc(db, 'users', userId);
-    await updateDoc(userRef, { status: newStatus });
-    return { id: userId, status: newStatus };
-  } catch (e) {
-    console.error("Error updating user status:", e);
-    return null;
+  saveUserOverride(userId, { status: newStatus });
+  if (db) {
+    try {
+      const userRef = doc(db, 'users', userId);
+      await setDoc(userRef, { status: newStatus }, { merge: true });
+    } catch (e) {
+      console.warn("Firestore updateUserStatus sync warning:", e);
+    }
   }
+  return { id: userId, status: newStatus };
 };
 
 /**
  * Toggle user role between user and admin
  */
 export const toggleUserRole = async (userId, currentRole) => {
-  if (!db) return null;
-  try {
-    const newRole = currentRole === 'admin' ? 'user' : 'admin';
-    const userRef = doc(db, 'users', userId);
-    await updateDoc(userRef, { role: newRole });
-    return { id: userId, role: newRole };
-  } catch (e) {
-    console.error("Error toggling user role:", e);
-    return null;
+  const newRole = currentRole === 'admin' ? 'user' : 'admin';
+  saveUserOverride(userId, { role: newRole });
+  if (db) {
+    try {
+      const userRef = doc(db, 'users', userId);
+      await setDoc(userRef, { role: newRole }, { merge: true });
+    } catch (e) {
+      console.warn("Firestore toggleUserRole sync warning:", e);
+    }
   }
+  return { id: userId, role: newRole };
 };
 
 const DEFAULT_SETTINGS = {

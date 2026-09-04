@@ -144,32 +144,22 @@ export const AuthProvider = ({ children }) => {
     };
   }, []);
 
-  // Sign in with Google with mobile popup & redirect fallback
+  // Sign in with Google (using popup to avoid cross-origin partitioned sessionStorage error)
   const signInWithGoogle = async () => {
     if (isFirebaseConfigured && auth) {
       try {
-        // Try popup first (fastest for desktop and standard mobile browsers)
         const result = await signInWithPopup(auth, googleProvider);
         return result.user;
       } catch (error) {
-        console.warn('Popup Google Sign In failed, attempting fallback or reporting:', error);
-        
-        // If popup was blocked or storage is partitioned (common in mobile WebViews), try redirect
-        if (
-          error.code === 'auth/popup-blocked' || 
-          error.code === 'auth/cancelled-popup-request' ||
-          error.code === 'auth/popup-closed-by-user' ||
-          error.message?.includes('missing initial state') ||
-          error.message?.includes('sessionStorage')
-        ) {
-          try {
-            console.info('Switching to signInWithRedirect for mobile browser compatibility...');
-            await signInWithRedirect(auth, googleProvider);
-            return null;
-          } catch (redirectErr) {
-            console.error('Redirect sign in failed:', redirectErr);
-            throw redirectErr;
-          }
+        console.warn('Google Sign In Error:', error);
+        if (error.code === 'auth/popup-closed-by-user' || error.code === 'auth/cancelled-popup-request') {
+          throw new Error('Đã đóng cửa sổ đăng nhập Google.');
+        }
+        if (error.code === 'auth/popup-blocked') {
+          throw new Error('Trình duyệt đã chặn cửa sổ Popup. Vui lòng cho phép mở Popup trong cài đặt trình duyệt để đăng nhập.');
+        }
+        if (error.code === 'auth/network-request-failed') {
+          throw new Error('Lỗi kết nối mạng. Vui lòng kiểm tra lại kết nối Internet.');
         }
         throw error;
       }
