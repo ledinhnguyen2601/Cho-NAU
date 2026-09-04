@@ -1,6 +1,7 @@
 // File: src/App.jsx
 import React from 'react';
 import { BrowserRouter } from 'react-router-dom';
+import { Analytics } from '@vercel/analytics/react';
 
 // Providers
 import { ThemeProvider } from './context/ThemeContext';
@@ -18,6 +19,7 @@ export function App() {
         <AuthProvider>
           <CartProvider>
             <AppRoutes />
+            <Analytics />
           </CartProvider>
         </AuthProvider>
       </ToastProvider>
