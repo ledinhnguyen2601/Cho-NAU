@@ -24,7 +24,16 @@ export const uploadProductImage = async (file, onProgress) => {
       if (onProgress) onProgress(100);
       return downloadURL;
     } catch (error) {
-      console.error('Firebase Storage Upload Error:', error);
+      console.error('Firebase Storage Upload Error:', error.code, error.message, error);
+      if (error.code === 'storage/unauthorized') {
+        throw new Error('Không có quyền upload ảnh. Hãy đảm bảo bạn đã đăng nhập.');
+      }
+      if (error.code === 'storage/retry-limit-exceeded') {
+        throw new Error('Upload ảnh bị timeout. Vui lòng kiểm tra kết nối mạng và thử lại.');
+      }
+      if (error.code === 'storage/canceled') {
+        throw new Error('Upload ảnh đã bị hủy.');
+      }
       throw error;
     }
   }

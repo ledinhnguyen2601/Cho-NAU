@@ -29,7 +29,7 @@ export const CreateProductPage = () => {
     title: '',
     price: '',
     originalPrice: '',
-    category: 'sach-giao-trinh',
+    category: 'study',
     condition: 'Đã sử dụng - Rất tốt (90%)',
     location: 'Cơ sở 1 NAU (P. Hưng Dũng, TP. Vinh)',
     description: '',
@@ -87,6 +87,7 @@ export const CreateProductPage = () => {
     }
 
     setIsUploading(true);
+    setFormErrors(prev => ({ ...prev, images: undefined }));
     try {
       const uploadedUrls = [];
       for (const file of files) {
@@ -99,10 +100,20 @@ export const CreateProductPage = () => {
       }));
       toast.success(`Đã tải lên ${uploadedUrls.length} hình ảnh!`);
     } catch (err) {
-      toast.error(err.message || 'Lỗi tải ảnh');
+      console.error('Image upload error details:', err);
+      const errorMsg = err.code === 'storage/unauthorized'
+        ? 'Không có quyền tải ảnh. Vui lòng đăng nhập lại.'
+        : err.code === 'storage/canceled'
+        ? 'Tải ảnh bị hủy.'
+        : err.code === 'storage/unknown'
+        ? 'Lỗi kết nối Firebase Storage. Vui lòng thử lại.'
+        : err.message || 'Lỗi tải ảnh. Vui lòng thử lại.';
+      toast.error(errorMsg);
     } finally {
       setIsUploading(false);
       setUploadProgress(0);
+      // Reset input file để có thể chọn lại cùng file
+      e.target.value = '';
     }
   };
 
@@ -118,7 +129,9 @@ export const CreateProductPage = () => {
     const validation = validateProductForm(form);
     if (!validation.isValid) {
       setFormErrors(validation.errors);
-      toast.error('Vui lòng kiểm tra lại các trường thông tin bắt buộc.');
+      // Hiển thị lỗi cụ thể đầu tiên thay vì thông báo chung chung
+      const firstError = Object.values(validation.errors)[0];
+      toast.error(firstError || 'Vui lòng kiểm tra lại các trường thông tin bắt buộc.');
       return;
     }
 
