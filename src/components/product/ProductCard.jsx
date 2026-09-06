@@ -106,26 +106,26 @@ export const ProductCard = ({ product }) => {
         >
           <Bookmark className={`w-4 h-4 ${isSaved ? 'fill-nau-red text-nau-red' : ''}`} />
         </button>
-
-        {/* Condition Tag */}
-        <div className="absolute bottom-2.5 left-2.5">
-          <span className="px-2 py-0.5 rounded-md bg-nau-surface/90 dark:bg-nau-background/90 backdrop-blur-md text-nau-text dark:text-nau-text text-[10px] font-medium border border-nau-border/50 dark:border-nau-border/50">
-            {product.condition}
-          </span>
-        </div>
       </Link>
 
       {/* Card Body */}
       <div className="p-3.5 sm:p-4 flex-1 flex flex-col justify-between">
         <div>
-          {/* Price & Original Price */}
-          <div className="flex items-baseline gap-2 mb-1.5">
-            <span className="text-base sm:text-lg font-black text-nau-red dark:text-nau-red-hover">
-              {formatCurrency(product.price)}
-            </span>
-            {product.originalPrice && product.originalPrice > product.price && (
-              <span className="text-xs text-slate-400 line-through">
-                {formatCurrency(product.originalPrice)}
+          {/* Price & Original Price & Condition */}
+          <div className="flex items-center justify-between gap-1 mb-1.5">
+            <div className="flex items-baseline gap-2 min-w-0">
+              <span className="text-base sm:text-lg font-black text-nau-red dark:text-nau-red-hover truncate">
+                {formatCurrency(product.price)}
+              </span>
+              {product.originalPrice && product.originalPrice > product.price && (
+                <span className="text-xs text-slate-400 line-through truncate">
+                  {formatCurrency(product.originalPrice)}
+                </span>
+              )}
+            </div>
+            {product.condition && (
+              <span className="text-[10px] font-medium text-nau-text-secondary dark:text-nau-text-muted bg-slate-100 dark:bg-nau-surface px-2 py-0.5 rounded-md shrink-0">
+                {product.condition}
               </span>
             )}
           </div>

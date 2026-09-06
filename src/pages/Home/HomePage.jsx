@@ -1,6 +1,7 @@
 // File: src/pages/Home/HomePage.jsx
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
 import { getProducts } from '../../services/productService';
 import { INITIAL_CATEGORIES } from '../../config/constants';
 import { ProductGrid } from '../../components/product/ProductGrid';
@@ -39,6 +40,7 @@ const iconMap = {
 };
 
 export const HomePage = () => {
+  const { currentUser, isVerified } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
   const searchParam = searchParams.get('search') || '';
   const categoryParam = searchParams.get('category') || 'all';
@@ -146,19 +148,26 @@ export const HomePage = () => {
           </p>
 
           <div className="flex flex-wrap items-center gap-3 pt-2">
-            <Link
-              to="/verification"
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-nau-red hover:bg-nau-red-hover text-white text-xs font-bold shadow-md shadow-nau-red/25 transition-all transform active:scale-95"
-            >
-              <span>Xác thực Thẻ Sinh Viên</span>
-              <ArrowRight className="w-4 h-4" />
-            </Link>
+            {!isVerified && (
+              <Link
+                to={currentUser ? "/verification" : "/login"}
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-nau-red hover:bg-nau-red-hover text-white text-xs font-bold shadow-md shadow-nau-red/25 transition-all transform active:scale-95"
+              >
+                <span>Xác thực Thẻ Sinh Viên</span>
+                <ArrowRight className="w-4 h-4" />
+              </Link>
+            )}
 
             <Link
               to="/create-product"
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white dark:bg-nau-surface hover:bg-nau-blue-light/40 border border-nau-blue text-nau-blue dark:text-nau-blue-light text-xs font-bold transition-all shadow-xs"
+              className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold transition-all shadow-xs ${
+                isVerified
+                  ? 'bg-nau-red hover:bg-nau-red-hover text-white shadow-md shadow-nau-red/25 active:scale-95'
+                  : 'bg-white dark:bg-nau-surface hover:bg-nau-blue-light/40 border border-nau-blue text-nau-blue dark:text-nau-blue-light'
+              }`}
             >
               <span>Đăng bán đồ cũ ngay</span>
+              {isVerified && <ArrowRight className="w-4 h-4" />}
             </Link>
           </div>
         </div>
