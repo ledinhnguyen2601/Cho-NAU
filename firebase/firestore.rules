@@ -54,9 +54,12 @@ service cloud.firestore {
       allow update: if isAdmin() || (
         isOwner(userId) && (
           isAdminEmail() || (
-            !request.resource.data.diff(resource.data).affectedKeys().hasAny(['role']) &&
+            // Non-admin cannot elevate their own role to admin
+            (!('role' in request.resource.data) || request.resource.data.role == resource.data.role) &&
+            // Regular user can only submit 'pending_verification' or keep existing status
             (
-              !request.resource.data.diff(resource.data).affectedKeys().hasAny(['verificationStatus']) ||
+              !('verificationStatus' in request.resource.data) ||
+              request.resource.data.verificationStatus == resource.data.verificationStatus ||
               request.resource.data.verificationStatus == 'pending_verification'
             )
           )
@@ -69,8 +72,7 @@ service cloud.firestore {
     // Verifications collection (dual sync for moderation)
     match /verifications/{verificationId} {
       allow read: if isAuthenticated() && (resource.data.userId == request.auth.uid || isAdmin());
-      allow create, update: if isAuthenticated() && (request.resource.data.userId == request.auth.uid || isAdmin());
-      allow delete: if isAdmin();
+      allow write: if isAuthenticated() && (request.auth.uid == verificationId || isAdmin());
     }
 
     // 2. Products collection

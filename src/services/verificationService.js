@@ -37,19 +37,30 @@ export const submitVerification = async (userId, data) => {
 
   if (!db) throw new Error("Cơ sở dữ liệu chưa được kết nối.");
 
+  // Primary: update the user document in 'users' collection
   try {
     const userRef = doc(db, 'users', actualUid);
     await setDoc(userRef, updateData, { merge: true });
+  } catch (e) {
+    console.warn('Firestore setDoc failed, attempting updateDoc fallback:', e);
+    try {
+      const userRef = doc(db, 'users', actualUid);
+      await updateDoc(userRef, updateData);
+    } catch (innerErr) {
+      console.error('Firestore submitVerification error:', innerErr);
+      throw new Error(`Lỗi lưu hồ sơ lên hệ thống: ${innerErr.message}`);
+    }
+  }
 
-    // Also write to dedicated verifications collection for easy admin indexing
+  // Secondary mirror: write to 'verifications' collection without blocking if rules differ
+  try {
     const verifRef = doc(db, 'verifications', actualUid);
     await setDoc(verifRef, updateData, { merge: true });
-
-    return updateData;
-  } catch (e) {
-    console.error('Firestore submitVerification error:', e);
-    throw new Error(`Lỗi lưu hồ sơ lên hệ thống: ${e.message}`);
+  } catch (vErr) {
+    console.warn('Could not mirror to verifications collection (non-critical):', vErr);
   }
+
+  return updateData;
 };
 
 /**
