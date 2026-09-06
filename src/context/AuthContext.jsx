@@ -59,7 +59,15 @@ export const AuthProvider = ({ children }) => {
       console.warn('Redirect result error (can be ignored if not redirecting):', err);
     });
 
+    let unsubscribeSnapshot = null;
+
     const unsubscribe = onAuthStateChanged(auth, async (fbUser) => {
+      // Clean up previous user's snapshot listener
+      if (unsubscribeSnapshot) {
+        unsubscribeSnapshot();
+        unsubscribeSnapshot = null;
+      }
+
       if (fbUser) {
         try {
           const userEmail = (fbUser.email || '').toLowerCase();
@@ -111,6 +119,20 @@ export const AuthProvider = ({ children }) => {
             setCurrentUser(newUser);
           }
 
+          // Real-time listener: sync changes made by admin (verification approval/rejection)
+          // This ensures user sees status change without refreshing the page
+          unsubscribeSnapshot = onSnapshot(userDocRef, (docSnap) => {
+            if (docSnap.exists()) {
+              const freshData = docSnap.data();
+              setCurrentUser(prev => {
+                if (!prev || prev.id !== fbUser.uid) return prev;
+                return { ...prev, ...freshData, id: fbUser.uid };
+              });
+            }
+          }, (err) => {
+            console.warn('User document snapshot listener error:', err);
+          });
+
           // Heartbeat interval every 60s
           if (heartbeatTimerRef.current) clearInterval(heartbeatTimerRef.current);
           heartbeatTimerRef.current = setInterval(() => {
@@ -137,6 +159,7 @@ export const AuthProvider = ({ children }) => {
     window.addEventListener('pagehide', handleBeforeUnload);
 
     return () => {
+      if (unsubscribeSnapshot) unsubscribeSnapshot();
       if (heartbeatTimerRef.current) clearInterval(heartbeatTimerRef.current);
       window.removeEventListener('beforeunload', handleBeforeUnload);
       window.removeEventListener('pagehide', handleBeforeUnload);

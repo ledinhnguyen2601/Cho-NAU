@@ -129,7 +129,9 @@ export const VerificationPage = () => {
 
       toast.success('Hồ sơ xác thực đã được gửi thành công! Ban Quản Trị sẽ duyệt trong vòng 2-4 giờ.');
     } catch (err) {
-      toast.error('Không thể gửi hồ sơ xác thực. Vui lòng thử lại.');
+      console.error('Verification submission error:', err);
+      const msg = err.message || 'Không thể gửi hồ sơ xác thực. Vui lòng thử lại.';
+      toast.error(msg);
     } finally {
       setIsSubmitting(false);
     }

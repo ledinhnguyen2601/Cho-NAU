@@ -3,42 +3,21 @@ import { storage, ref, uploadBytes, getDownloadURL, isFirebaseConfigured } from 
 import { validateImageFile } from '../utils/validators';
 
 /**
- * Upload single image to Firebase Storage or generate base64 URL
+ * Wrap a promise with a timeout to prevent hanging forever
  */
-export const uploadProductImage = async (file, onProgress) => {
-  const validation = validateImageFile(file);
-  if (!validation.isValid) {
-    throw new Error(validation.error);
-  }
+const withTimeout = (promise, ms = 15000) => {
+  return Promise.race([
+    promise,
+    new Promise((_, reject) =>
+      setTimeout(() => reject(new Error('Upload timeout - kết nối Firebase Storage quá chậm.')), ms)
+    )
+  ]);
+};
 
-  if (isFirebaseConfigured && storage) {
-    try {
-      const fileExt = file.name.split('.').pop();
-      const fileName = `products/${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
-      const storageRef = ref(storage, fileName);
-
-      if (onProgress) onProgress(30);
-      const snapshot = await uploadBytes(storageRef, file);
-      if (onProgress) onProgress(70);
-      const downloadURL = await getDownloadURL(snapshot.ref);
-      if (onProgress) onProgress(100);
-      return downloadURL;
-    } catch (error) {
-      console.error('Firebase Storage Upload Error:', error.code, error.message, error);
-      if (error.code === 'storage/unauthorized') {
-        throw new Error('Không có quyền upload ảnh. Hãy đảm bảo bạn đã đăng nhập.');
-      }
-      if (error.code === 'storage/retry-limit-exceeded') {
-        throw new Error('Upload ảnh bị timeout. Vui lòng kiểm tra kết nối mạng và thử lại.');
-      }
-      if (error.code === 'storage/canceled') {
-        throw new Error('Upload ảnh đã bị hủy.');
-      }
-      throw error;
-    }
-  }
-
-  // Fallback to local FileReader preview if storage is not connected
+/**
+ * Fallback: convert file to base64 data URL (works without Firebase Storage)
+ */
+const fileToBase64 = (file, onProgress) => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => {
@@ -51,7 +30,43 @@ export const uploadProductImage = async (file, onProgress) => {
 };
 
 /**
+ * Upload single image to Firebase Storage with automatic fallback to base64
+ * If Firebase Storage fails for ANY reason (CORS, rules, network), 
+ * automatically falls back to base64 data URL so the app always works.
+ */
+export const uploadProductImage = async (file, onProgress) => {
+  const validation = validateImageFile(file);
+  if (!validation.isValid) {
+    throw new Error(validation.error);
+  }
+
+  // Try Firebase Storage first
+  if (isFirebaseConfigured && storage) {
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `products/${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
+      const storageRef = ref(storage, fileName);
+
+      if (onProgress) onProgress(20);
+      const snapshot = await withTimeout(uploadBytes(storageRef, file), 20000);
+      if (onProgress) onProgress(70);
+      const downloadURL = await withTimeout(getDownloadURL(snapshot.ref), 10000);
+      if (onProgress) onProgress(100);
+      return downloadURL;
+    } catch (error) {
+      console.warn('Firebase Storage upload failed, falling back to base64:', error.code || error.message);
+      // Fall through to base64 fallback — do NOT throw
+    }
+  }
+
+  // Fallback: always works, stores image as base64 data URL
+  if (onProgress) onProgress(50);
+  return fileToBase64(file, onProgress);
+};
+
+/**
  * Upload student verification document (Student Card or CCCD)
+ * Same fallback strategy as product images.
  */
 export const uploadVerificationDocument = async (file, onProgress) => {
   const validation = validateImageFile(file);
@@ -59,31 +74,26 @@ export const uploadVerificationDocument = async (file, onProgress) => {
     throw new Error(validation.error);
   }
 
+  // Try Firebase Storage first
   if (isFirebaseConfigured && storage) {
     try {
       const fileExt = file.name.split('.').pop();
       const fileName = `verifications/${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
       const storageRef = ref(storage, fileName);
 
-      if (onProgress) onProgress(40);
-      const snapshot = await uploadBytes(storageRef, file);
-      if (onProgress) onProgress(80);
-      const downloadURL = await getDownloadURL(snapshot.ref);
+      if (onProgress) onProgress(30);
+      const snapshot = await withTimeout(uploadBytes(storageRef, file), 20000);
+      if (onProgress) onProgress(70);
+      const downloadURL = await withTimeout(getDownloadURL(snapshot.ref), 10000);
       if (onProgress) onProgress(100);
       return downloadURL;
     } catch (error) {
-      console.error('Upload verification doc error:', error);
-      throw error;
+      console.warn('Firebase Storage verification upload failed, falling back to base64:', error.code || error.message);
+      // Fall through to base64 fallback
     }
   }
 
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => {
-      if (onProgress) onProgress(100);
-      resolve(reader.result);
-    };
-    reader.onerror = () => reject(new Error('Không thể đọc file tài liệu'));
-    reader.readAsDataURL(file);
-  });
+  // Fallback: always works
+  if (onProgress) onProgress(50);
+  return fileToBase64(file, onProgress);
 };

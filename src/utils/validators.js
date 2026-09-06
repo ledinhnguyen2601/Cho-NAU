@@ -28,10 +28,13 @@ export const validateProductForm = (values) => {
     errors.title = 'Tiêu đề không được vượt quá 120 ký tự.';
   }
 
-  if (values.price === undefined || values.price === '' || isNaN(values.price)) {
+  const priceNum = Number(values.price);
+  if (values.price === undefined || values.price === '' || isNaN(priceNum)) {
     errors.price = 'Vui lòng nhập giá bán hợp lệ.';
-  } else if (Number(values.price) < 0) {
-    errors.price = 'Giá bán không thể là số âm.';
+  } else if (priceNum < 1000) {
+    errors.price = 'Giá bán tối thiểu là 1.000đ.';
+  } else if (priceNum > 500000000) {
+    errors.price = 'Giá bán không hợp lệ (quá cao).';
   }
 
   if (!values.category) {

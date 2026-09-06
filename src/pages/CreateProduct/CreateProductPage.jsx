@@ -28,13 +28,20 @@ export const CreateProductPage = () => {
   const [form, setForm] = useState({
     title: '',
     price: '',
-    originalPrice: '',
     category: 'study',
     condition: 'Đã sử dụng - Rất tốt (90%)',
     location: 'Cơ sở 1 NAU (P. Hưng Dũng, TP. Vinh)',
     description: '',
     images: []
   });
+
+  // Clear individual field error when user edits that field
+  const handleFieldChange = (field, value) => {
+    setForm(prev => ({ ...prev, [field]: value }));
+    if (formErrors[field]) {
+      setFormErrors(prev => ({ ...prev, [field]: undefined }));
+    }
+  };
 
   const [formErrors, setFormErrors] = useState({});
   const [isUploading, setIsUploading] = useState(false);
@@ -141,7 +148,6 @@ export const CreateProductPage = () => {
       const newProd = await createProduct({
         ...form,
         price: Number(form.price),
-        originalPrice: form.originalPrice ? Number(form.originalPrice) : null,
         categoryName: selectedCategory?.name || 'Đồ cũ sinh viên'
       }, currentUser);
 
@@ -241,7 +247,7 @@ export const CreateProductPage = () => {
             required
             placeholder="Ví dụ: Giáo trình Đại số K62, Laptop Dell Vostro i5, Xe đạp Asama..."
             value={form.title}
-            onChange={(e) => setForm({ ...form, title: e.target.value })}
+            onChange={(e) => handleFieldChange('title', e.target.value)}
             error={formErrors.title}
           />
 
@@ -253,7 +259,7 @@ export const CreateProductPage = () => {
               </label>
               <select
                 value={form.category}
-                onChange={(e) => setForm({ ...form, category: e.target.value })}
+                onChange={(e) => handleFieldChange('category', e.target.value)}
                 className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-nau-border dark:border-nau-border bg-nau-surface dark:bg-nau-background text-nau-text dark:text-nau-text"
               >
                 {INITIAL_CATEGORIES.map(c => (
@@ -268,7 +274,7 @@ export const CreateProductPage = () => {
               </label>
               <select
                 value={form.condition}
-                onChange={(e) => setForm({ ...form, condition: e.target.value })}
+                onChange={(e) => handleFieldChange('condition', e.target.value)}
                 className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-nau-border dark:border-nau-border bg-nau-surface dark:bg-nau-background text-nau-text dark:text-nau-text"
               >
                 <option value="Mới 100% (Chưa qua sử dụng)">Mới 100% (Chưa qua sử dụng)</option>
@@ -279,27 +285,16 @@ export const CreateProductPage = () => {
             </div>
           </div>
 
-          {/* Price & Original Price */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <Input
-              label="Giá bán (VNĐ)"
-              type="number"
-              required
-              placeholder="Ví dụ: 150000"
-              value={form.price}
-              onChange={(e) => setForm({ ...form, price: e.target.value })}
-              error={formErrors.price}
-            />
-
-            <Input
-              label="Giá gốc lúc mua mới (Tùy chọn)"
-              type="number"
-              placeholder="Ví dụ: 300000"
-              value={form.originalPrice}
-              onChange={(e) => setForm({ ...form, originalPrice: e.target.value })}
-              helperText="Giúp người mua thấy được mức tiết kiệm"
-            />
-          </div>
+          {/* Price */}
+          <Input
+            label="Giá bán (VNĐ)"
+            type="number"
+            required
+            placeholder="Ví dụ: 150000"
+            value={form.price}
+            onChange={(e) => handleFieldChange('price', e.target.value)}
+            error={formErrors.price}
+          />
 
           {/* Location */}
           <Input
@@ -307,7 +302,7 @@ export const CreateProductPage = () => {
             required
             placeholder="Ví dụ: Cơ sở 1 NAU, KTX Nữ B, Cổng sau đường Nguyễn Viết Xuân..."
             value={form.location}
-            onChange={(e) => setForm({ ...form, location: e.target.value })}
+            onChange={(e) => handleFieldChange('location', e.target.value)}
             error={formErrors.location}
           />
 
@@ -319,7 +314,7 @@ export const CreateProductPage = () => {
             <textarea
               rows={5}
               value={form.description}
-              onChange={(e) => setForm({ ...form, description: e.target.value })}
+              onChange={(e) => handleFieldChange('description', e.target.value)}
               placeholder="Nêu rõ tình trạng hoạt động, lý do bán, phụ kiện đi kèm, thời gian xem đồ phù hợp..."
               className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-nau-border dark:border-nau-border bg-nau-surface dark:bg-nau-background text-nau-text dark:text-nau-text placeholder-slate-400 focus:ring-2 focus:ring-nau-primary"
             />
