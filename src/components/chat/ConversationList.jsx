@@ -71,10 +71,12 @@ export const ConversationList = ({
                 </p>
               </div>
 
-              {/* Unread badge */}
+              {/* Unread count badge */}
               {hasUnread && (
-                <div className="shrink-0 flex items-center self-center mr-1">
-                  <span className="w-2.5 h-2.5 rounded-full bg-nau-red ring-2 ring-white dark:ring-slate-950 animate-pulse-subtle" />
+                <div className="shrink-0 flex items-center self-center ml-1">
+                  <span className="bg-red-600 text-white text-[10px] font-black min-w-[20px] h-[20px] px-1.5 rounded-full flex items-center justify-center shadow-xs ring-2 ring-white dark:ring-slate-900 animate-pulse">
+                    {conv.unreadCount > 99 ? '99+' : (conv.unreadCount || 1)}
+                  </span>
                 </div>
               )}
             </button>

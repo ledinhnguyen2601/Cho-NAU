@@ -170,6 +170,61 @@ export const getUnreadConversationsCount = async (userId) => {
 };
 
 /**
+ * Subscribe in real-time to total unread count for a user across all active conversations
+ * Uses Firestore onSnapshot to update instantly without waiting or polling
+ */
+export const subscribeToUnreadCount = (userId, callback) => {
+  if (!isFirebaseConfigured || !db || !userId) {
+    callback(0);
+    return () => {};
+  }
+
+  try {
+    const buyerMap = new Map();
+    const sellerMap = new Map();
+
+    const computeUnread = () => {
+      let total = 0;
+      const all = new Map([...buyerMap, ...sellerMap]);
+      all.forEach((c) => {
+        if (c.lastSenderId && c.lastSenderId !== userId && (c.unreadCount || 0) > 0) {
+          total += (c.unreadCount || 1);
+        }
+      });
+      callback(total);
+    };
+
+    const qBuyer = query(collection(db, 'conversations'), where('buyerId', '==', userId));
+    const qSeller = query(collection(db, 'conversations'), where('sellerId', '==', userId));
+
+    const unsubBuyer = onSnapshot(qBuyer, (snap) => {
+      buyerMap.clear();
+      snap.docs.forEach(d => buyerMap.set(d.id, d.data()));
+      computeUnread();
+    }, (err) => {
+      console.warn('Buyer unread snapshot error:', err);
+    });
+
+    const unsubSeller = onSnapshot(qSeller, (snap) => {
+      sellerMap.clear();
+      snap.docs.forEach(d => sellerMap.set(d.id, d.data()));
+      computeUnread();
+    }, (err) => {
+      console.warn('Seller unread snapshot error:', err);
+    });
+
+    return () => {
+      unsubBuyer();
+      unsubSeller();
+    };
+  } catch (err) {
+    console.warn('subscribeToUnreadCount error:', err);
+    callback(0);
+    return () => {};
+  }
+};
+
+/**
  * Get specific conversation by ID
  */
 export const getConversationById = async (conversationId) => {

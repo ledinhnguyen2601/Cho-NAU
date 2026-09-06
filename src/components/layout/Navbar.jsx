@@ -4,7 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
 import { useToast } from '../../context/ToastContext';
 import { ThemeToggle } from '../common/ThemeToggle';
-import { getUnreadConversationsCount } from '../../services/chatService';
+import { getUnreadConversationsCount, subscribeToUnreadCount } from '../../services/chatService';
 import { 
   Search, 
   PlusCircle, 
@@ -40,16 +40,13 @@ export const Navbar = () => {
       return;
     }
 
-    const checkUnread = async () => {
-      try {
-        const count = await getUnreadConversationsCount(currentUser.id);
-        setUnreadChatCount(count);
-      } catch (e) {}
-    };
+    const unsubscribe = subscribeToUnreadCount(currentUser.id, (count) => {
+      setUnreadChatCount(count);
+    });
 
-    checkUnread();
-    const interval = setInterval(checkUnread, 15000);
-    return () => clearInterval(interval);
+    return () => {
+      if (typeof unsubscribe === 'function') unsubscribe();
+    };
   }, [currentUser?.id, location.pathname]);
 
   const handleSearch = (e) => {
@@ -141,7 +138,9 @@ export const Navbar = () => {
             >
               <MessageSquare className="w-5 h-5" />
               {currentUser && unreadChatCount > 0 && (
-                <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 rounded-full bg-nau-red ring-2 ring-white dark:ring-slate-950 animate-pulse-subtle" />
+                <span className="absolute -top-1 -right-1 bg-red-600 text-white text-[10px] font-black min-w-[18px] h-[18px] px-1 rounded-full flex items-center justify-center ring-2 ring-white dark:ring-slate-950 shadow-md animate-pulse">
+                  {unreadChatCount > 99 ? '99+' : unreadChatCount}
+                </span>
               )}
             </Link>
 
@@ -247,6 +246,21 @@ export const Navbar = () => {
                         >
                           <User className="w-4 h-4 text-slate-400" />
                           <span>Trang cá nhân & Uy tín</span>
+                        </Link>
+                        <Link
+                          to="/chat"
+                          onClick={() => setIsUserMenuOpen(false)}
+                          className="flex items-center justify-between px-3 py-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800"
+                        >
+                          <div className="flex items-center gap-2">
+                            <MessageSquare className="w-4 h-4 text-slate-400" />
+                            <span>Tin nhắn trao đổi</span>
+                          </div>
+                          {unreadChatCount > 0 && (
+                            <span className="bg-red-600 text-white text-[10px] font-black px-1.5 py-0.5 rounded-full shadow-xs">
+                              {unreadChatCount > 99 ? '99+' : unreadChatCount}
+                            </span>
+                          )}
                         </Link>
                         <Link
                           to="/orders"
@@ -362,9 +376,14 @@ export const Navbar = () => {
               <Link
                 to="/chat"
                 onClick={() => setIsMobileMenuOpen(false)}
-                className="p-2.5 rounded-xl bg-slate-100 dark:bg-nau-background text-center"
+                className="p-2.5 rounded-xl bg-slate-100 dark:bg-nau-background text-center flex items-center justify-center gap-1.5 relative"
               >
-                Tin nhắn
+                <span>Tin nhắn</span>
+                {currentUser && unreadChatCount > 0 && (
+                  <span className="bg-red-600 text-white text-[10px] font-black px-1.5 py-0.2 rounded-full shadow-xs">
+                    {unreadChatCount > 99 ? '99+' : unreadChatCount}
+                  </span>
+                )}
               </Link>
               <Link
                 to="/verification"

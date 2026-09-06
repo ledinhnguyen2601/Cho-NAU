@@ -147,13 +147,18 @@ export const ChatWindow = ({
 
       {/* Messages Scroll Area */}
       <div className="flex-1 overflow-y-auto p-4 space-y-1">
-        {conversation.messages?.length === 0 ? (
+        {conversation.messages === undefined ? (
+          <div className="h-full flex flex-col items-center justify-center text-center p-6 text-slate-400">
+            <div className="w-5 h-5 border-2 border-nau-primary border-t-transparent rounded-full animate-spin mb-2" />
+            <p className="text-xs font-medium">Đang đồng bộ tin nhắn...</p>
+          </div>
+        ) : conversation.messages.length === 0 ? (
           <div className="h-full flex flex-col items-center justify-center text-center p-6 text-slate-400">
             <p className="text-xs font-medium">Bắt đầu cuộc trò chuyện với người bán.</p>
             <p className="text-[11px] text-slate-400 mt-1">Lưu ý: Không chuyển tiền cọc qua tài khoản cá nhân khi chưa gặp mặt xem đồ.</p>
           </div>
         ) : (
-          conversation.messages.map((msg) => (
+          (conversation.messages || []).map((msg) => (
             <MessageBubble
               key={msg.id}
               message={msg}
