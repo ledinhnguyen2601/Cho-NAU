@@ -167,28 +167,41 @@ export const AuthProvider = ({ children }) => {
     };
   }, []);
 
-  // Sign in with Google (using popup, with automatic redirect fallback for Cốc Cốc & mobile)
+  // Direct Google Sign In via page redirect (100% bypasses popup blocker & cookie sandbox in Cốc Cốc & Safari)
+  const signInWithGoogleRedirect = async () => {
+    if (isFirebaseConfigured && auth) {
+      await signInWithRedirect(auth, googleProvider);
+    } else {
+      throw new Error('Firebase chưa được cấu hình. Vui lòng kiểm tra file .env');
+    }
+  };
+
+  // Sign in with Google (using popup for standard browsers, auto-redirect for Cốc Cốc & mobile)
   const signInWithGoogle = async () => {
     if (isFirebaseConfigured && auth) {
+      // If Cốc Cốc browser detected, automatically use direct redirect to bypass Cốc Cốc popup/cross-origin sandbox
+      const isCocCoc = typeof navigator !== 'undefined' && /coc_coc|coccoc/i.test(navigator.userAgent);
+      if (isCocCoc) {
+        await signInWithRedirect(auth, googleProvider);
+        return null;
+      }
+
       try {
         const result = await signInWithPopup(auth, googleProvider);
         return result.user;
       } catch (error) {
         console.warn('Google Sign In Error:', error);
-        if (error.code === 'auth/unauthorized-domain') {
-          throw new Error(`Tên miền "${window.location.hostname}" chưa được cấp quyền đăng nhập trên Firebase Console. Vui lòng vào Firebase Console -> Authentication -> Settings -> Authorized domains để thêm tên miền này.`);
-        }
-        if (error.code === 'auth/popup-closed-by-user' || error.code === 'auth/cancelled-popup-request') {
-          throw new Error('Đã đóng cửa sổ đăng nhập Google.');
-        }
-        if (error.code === 'auth/popup-blocked') {
-          // Trình duyệt (Cốc Cốc / Safari / Mobile) chặn popup -> Tự động chuyển sang chế độ chuyển hướng (Redirect)
+        // If popup blocked or origin stripped by privacy shields (Cốc Cốc, Brave, Safari), automatically fallback to redirect!
+        if (error.code === 'auth/unauthorized-domain' || error.code === 'auth/popup-blocked') {
           try {
             await signInWithRedirect(auth, googleProvider);
             return null;
           } catch (redirectErr) {
-            throw new Error('Trình duyệt chặn mở cửa sổ. Vui lòng mở quyền Pop-up hoặc thử trình duyệt khác.');
+            throw new Error(`Trình duyệt chặn kết nối. Vui lòng thử nút "Đăng nhập trực tiếp" hoặc tạm tắt khiên bảo vệ của trình duyệt.`);
           }
+        }
+        if (error.code === 'auth/popup-closed-by-user' || error.code === 'auth/cancelled-popup-request') {
+          throw new Error('Đã đóng cửa sổ đăng nhập Google.');
         }
         if (error.code === 'auth/network-request-failed') {
           throw new Error('Lỗi kết nối mạng. Vui lòng kiểm tra lại kết nối Internet.');
@@ -257,6 +270,7 @@ export const AuthProvider = ({ children }) => {
     isAdmin,
     isSuspended,
     signInWithGoogle,
+    signInWithGoogleRedirect,
     signInWithFacebook,
     logout,
     updateUserProfile,

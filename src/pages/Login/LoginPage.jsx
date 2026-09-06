@@ -13,7 +13,7 @@ import {
 } from 'lucide-react';
 
 export const LoginPage = () => {
-  const { signInWithGoogle } = useAuth();
+  const { signInWithGoogle, signInWithGoogleRedirect } = useAuth();
   const toast = useToast();
   const navigate = useNavigate();
   const location = useLocation();
@@ -34,6 +34,17 @@ export const LoginPage = () => {
       console.error('Google login error:', err);
       toast.error('Đăng nhập Google thất bại: ' + (err.message || 'Lỗi'));
     } finally {
+      setIsLoadingGoogle(false);
+    }
+  };
+
+  const handleGoogleRedirectLogin = async () => {
+    setIsLoadingGoogle(true);
+    try {
+      await signInWithGoogleRedirect();
+    } catch (err) {
+      console.error('Google redirect login error:', err);
+      toast.error('Đăng nhập Google thất bại: ' + (err.message || 'Lỗi'));
       setIsLoadingGoogle(false);
     }
   };
@@ -66,7 +77,7 @@ export const LoginPage = () => {
           <button
             onClick={handleGoogleLogin}
             disabled={isLoadingGoogle}
-            className="w-full flex items-center justify-center gap-3 py-3 px-4 rounded-xl border border-nau-border dark:border-nau-border bg-nau-surface dark:bg-nau-surface text-nau-text dark:text-nau-text font-bold text-xs hover:bg-nau-background dark:hover:bg-slate-700/80 transition-all shadow-sm active:scale-[0.98]"
+            className="w-full flex items-center justify-center gap-3 py-3.5 px-4 rounded-xl border border-nau-border dark:border-nau-border bg-nau-surface dark:bg-nau-surface text-nau-text dark:text-nau-text font-bold text-xs hover:bg-nau-background dark:hover:bg-slate-700/80 transition-all shadow-sm active:scale-[0.98]"
           >
             <svg className="w-4 h-4" viewBox="0 0 24 24">
               <path
@@ -88,6 +99,26 @@ export const LoginPage = () => {
             </svg>
             <span>Đăng nhập với Google (@nau.edu.vn hoặc Gmail)</span>
           </button>
+
+          {/* Direct Redirect fallback for Cốc Cốc, Safari & Mobile */}
+          <button
+            onClick={handleGoogleRedirectLogin}
+            disabled={isLoadingGoogle}
+            type="button"
+            className="w-full text-center py-2 px-3 text-[11px] font-semibold text-slate-500 hover:text-nau-red dark:text-slate-400 dark:hover:text-nau-red-hover transition-colors"
+          >
+            Trình duyệt chặn mở popup? <u>Bấm vào đây để đăng nhập trực tiếp</u>
+          </button>
+        </div>
+
+        {/* Cốc Cốc & Mobile Browser Tip */}
+        <div className="p-3 bg-amber-50 dark:bg-amber-950/20 border border-amber-200/80 dark:border-amber-900/40 rounded-xl text-[11px] text-amber-900 dark:text-amber-200 space-y-1">
+          <p className="font-bold flex items-center gap-1.5">
+            <span>🛡️ Dành cho bạn dùng Cốc Cốc / Safari / Điện thoại:</span>
+          </p>
+          <p className="text-[10.5px] leading-relaxed opacity-90">
+            Nếu Cốc Cốc chặn mở cửa sổ hoặc báo lỗi kết nối, bạn hãy bấm vào dòng <strong>"đăng nhập trực tiếp"</strong> ở trên, hoặc bấm biểu tượng <strong>Khiên Cốc Cốc</strong> ở góc thanh địa chỉ và chọn <em>Tắt khiên trên trang này</em>.
+          </p>
         </div>
 
         {/* Note */}
