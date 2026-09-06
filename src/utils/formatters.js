@@ -13,11 +13,52 @@ export const formatCurrency = (amount) => {
 };
 
 /**
- * Format relative time in Vietnamese (e.g. "Vừa xong", "5 phút trước", "Hôm qua 14:30")
+ * Parse any date representation safely (Firestore Timestamp, ISO string, epoch number, Date instance)
+ * Returns a valid Date object or null if invalid. Never throws.
  */
-export const formatRelativeTime = (dateString) => {
-  if (!dateString) return '';
-  const date = new Date(dateString);
+export const parseDate = (input) => {
+  if (!input) return null;
+  if (input instanceof Date) return isNaN(input.getTime()) ? null : input;
+
+  // Firestore Timestamp with toDate()
+  if (typeof input?.toDate === 'function') {
+    try {
+      const d = input.toDate();
+      return isNaN(d?.getTime?.()) ? null : d;
+    } catch(e) { return null; }
+  }
+
+  // Firestore Timestamp with toMillis()
+  if (typeof input?.toMillis === 'function') {
+    try {
+      const d = new Date(input.toMillis());
+      return isNaN(d.getTime()) ? null : d;
+    } catch(e) { return null; }
+  }
+
+  // Firestore raw Timestamp object: { seconds: number, nanoseconds: number }
+  if (typeof input === 'object' && input.seconds !== undefined) {
+    const d = new Date(input.seconds * 1000);
+    return isNaN(d.getTime()) ? null : d;
+  }
+
+  // String or timestamp number
+  try {
+    const d = new Date(input);
+    return isNaN(d.getTime()) ? null : d;
+  } catch(e) {
+    return null;
+  }
+};
+
+/**
+ * Format relative time in Vietnamese (e.g. "Vừa xong", "5 phút trước", "Hôm qua 14:30")
+ * 100% crash-proof: handles Firestore Timestamps, strings, numbers, and null.
+ */
+export const formatRelativeTime = (dateInput) => {
+  const date = parseDate(dateInput);
+  if (!date) return 'Vừa xong';
+
   const now = new Date();
   const diffInSeconds = Math.floor((now - date) / 1000);
 
@@ -43,26 +84,36 @@ export const formatRelativeTime = (dateString) => {
     return `${diffInDays} ngày trước`;
   }
 
-  return new Intl.DateTimeFormat('vi-VN', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric'
-  }).format(date);
+  try {
+    return new Intl.DateTimeFormat('vi-VN', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    }).format(date);
+  } catch(e) {
+    return 'Gần đây';
+  }
 };
 
 /**
  * Format full date & time (e.g., "14:30, 24/08/2024")
+ * 100% crash-proof: handles Firestore Timestamps, strings, numbers, and null.
  */
-export const formatDateTime = (dateString) => {
-  if (!dateString) return '';
-  const date = new Date(dateString);
-  return new Intl.DateTimeFormat('vi-VN', {
-    hour: '2-digit',
-    minute: '2-digit',
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric'
-  }).format(date);
+export const formatDateTime = (dateInput) => {
+  const date = parseDate(dateInput);
+  if (!date) return '';
+
+  try {
+    return new Intl.DateTimeFormat('vi-VN', {
+      hour: '2-digit',
+      minute: '2-digit',
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    }).format(date);
+  } catch(e) {
+    return '';
+  }
 };
 
 /**

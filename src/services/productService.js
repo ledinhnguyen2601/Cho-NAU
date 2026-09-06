@@ -17,6 +17,7 @@ import {
   arrayUnion,
   arrayRemove
 } from '../config/firebase';
+import { parseDate } from '../utils/formatters';
 
 /**
  * Get all products with filtering, searching, and sorting
@@ -113,8 +114,8 @@ const applyClientFilters = (products, filters) => {
       list.sort((a, b) => {
         if (a.status === 'active' && b.status === 'sold') return -1;
         if (a.status === 'sold' && b.status === 'active') return 1;
-        const timeA = a.createdAt?.toMillis ? a.createdAt.toMillis() : new Date(a.createdAt || 0).getTime();
-        const timeB = b.createdAt?.toMillis ? b.createdAt.toMillis() : new Date(b.createdAt || 0).getTime();
+        const timeA = parseDate(a.createdAt)?.getTime() || 0;
+        const timeB = parseDate(b.createdAt)?.getTime() || 0;
         return timeB - timeA;
       });
       break;

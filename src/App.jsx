@@ -8,6 +8,9 @@ import { ToastProvider } from './context/ToastContext';
 import { AuthProvider } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
 
+// Components
+import { ErrorBoundary } from './components/common/ErrorBoundary';
+
 // Routes
 import { AppRoutes } from './routes/AppRoutes';
 
@@ -17,7 +20,9 @@ export function App() {
       <ToastProvider>
         <AuthProvider>
           <CartProvider>
-            <AppRoutes />
+            <ErrorBoundary>
+              <AppRoutes />
+            </ErrorBoundary>
           </CartProvider>
         </AuthProvider>
       </ToastProvider>

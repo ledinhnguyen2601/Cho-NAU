@@ -1,6 +1,5 @@
-// File: src/components/admin/UserModerationTable.jsx
 import React, { useState } from 'react';
-import { getVerificationBadgeInfo, formatDateTime } from '../../utils/formatters';
+import { getVerificationBadgeInfo, formatDateTime, parseDate } from '../../utils/formatters';
 import { RatingStars } from '../common/RatingStars';
 import { Button } from '../common/Button';
 import { Modal } from '../common/Modal';
@@ -51,7 +50,7 @@ export const UserModerationTable = ({
                 
                 // Check if user is online or active within 5 minutes
                 const isOnline = u.isOnline === true || (
-                  u.lastActive && (Date.now() - new Date(u.lastActive).getTime()) < 5 * 60 * 1000
+                  u.lastActive && (Date.now() - (parseDate(u.lastActive)?.getTime() || 0)) < 5 * 60 * 1000
                 );
 
                 return (

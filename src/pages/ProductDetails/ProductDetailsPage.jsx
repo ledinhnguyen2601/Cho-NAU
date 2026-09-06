@@ -56,20 +56,32 @@ export const ProductDetailsPage = () => {
         }
         setProduct(data);
 
-        // Load seller ratings
+        // Load seller ratings safely
         if (data.sellerId) {
-          const ratings = await getUserRatings(data.sellerId);
-          setSellerRatings(ratings);
+          try {
+            const ratings = await getUserRatings(data.sellerId);
+            setSellerRatings(Array.isArray(ratings) ? ratings : []);
+          } catch(e) {
+            setSellerRatings([]);
+          }
         }
 
-        // Load related products
-        const all = await getProducts({ category: data.category, status: 'active' });
-        setRelatedProducts(all.filter(p => p.id !== data.id).slice(0, 4));
+        // Load related products safely
+        try {
+          const all = await getProducts({ category: data.category, status: 'active' });
+          setRelatedProducts(Array.isArray(all) ? all.filter(p => p.id !== data.id).slice(0, 4) : []);
+        } catch(e) {
+          setRelatedProducts([]);
+        }
 
-        // Check if saved
-        if (currentUser) {
-          const savedIds = await getSavedProductIds(currentUser.id);
-          setIsSaved(savedIds.includes(data.id));
+        // Check if saved safely
+        if (currentUser?.id) {
+          try {
+            const savedIds = await getSavedProductIds(currentUser.id);
+            setIsSaved(Array.isArray(savedIds) && savedIds.includes(data.id));
+          } catch(e) {
+            setIsSaved(false);
+          }
         }
       } catch (err) {
         console.error('Load product details error:', err);

@@ -1,5 +1,5 @@
-// File: src/services/adminService.js
 import { db, collection, getDocs, doc, getDoc, setDoc, updateDoc, query, where, getCountFromServer } from '../config/firebase';
+import { parseDate } from '../utils/formatters';
 
 /**
  * Get comprehensive stats for Admin Dashboard
@@ -148,7 +148,7 @@ export const getAllUsers = async () => {
       status: userOverride.status || u.status || 'active',
       studentId: isSuperAdmin ? (u.studentId || 'ADMIN-NAU') : (u.studentId || ''),
       faculty: isSuperAdmin ? (u.faculty || 'Đại học Nghệ An') : (u.faculty || 'Đại học Nghệ An'),
-      isOnline: u.isOnline === true || (u.lastActive && (Date.now() - new Date(u.lastActive).getTime()) < 5 * 60 * 1000)
+      isOnline: u.isOnline === true || (u.lastActive && (Date.now() - (parseDate(u.lastActive)?.getTime() || 0)) < 5 * 60 * 1000)
     };
   });
 };
@@ -285,12 +285,14 @@ export const getAnalyticsData = async () => {
     let hasOrdersData = false;
     orders.forEach(order => {
       if (order.status === 'completed' && order.createdAt) {
-        const orderDate = new Date(order.createdAt);
-        const key = `Tháng ${orderDate.getMonth() + 1}`;
-        if (monthsMap[key]) {
-          monthsMap[key].revenue += Number(order.totalPrice || 0);
-          monthsMap[key].orders += 1;
-          hasOrdersData = true;
+        const orderDate = parseDate(order.createdAt);
+        if (orderDate) {
+          const key = `Tháng ${orderDate.getMonth() + 1}`;
+          if (monthsMap[key]) {
+            monthsMap[key].revenue += Number(order.totalPrice || 0);
+            monthsMap[key].orders += 1;
+            hasOrdersData = true;
+          }
         }
       }
     });
