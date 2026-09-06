@@ -45,7 +45,7 @@ const uploadToImgBB = async (file) => {
  * Uses high-quality bicubic smoothing so text, fine details, and edges remain sharp (>= 85% original quality).
  * Automatically adapts quality if file size exceeds safe limits for Firestore.
  */
-export const compressImage = (file, maxDimension = 1280, initialQuality = 0.85) => {
+export const compressImage = (file, maxDimension = 1440, initialQuality = 0.86) => {
   return new Promise((resolve, reject) => {
     // If it's already a string (base64 or URL), return as-is
     if (typeof file === 'string') {
@@ -83,13 +83,13 @@ export const compressImage = (file, maxDimension = 1280, initialQuality = 0.85) 
         ctx.fillRect(0, 0, width, height);
         ctx.drawImage(img, 0, 0, width, height);
         
-        // Convert to compressed JPEG data URL at 85% quality
+        // Convert to compressed JPEG data URL at high quality
         let quality = initialQuality;
         let compressedBase64 = canvas.toDataURL('image/jpeg', quality);
 
         // If dataUrl exceeds ~350KB, step quality down slightly (0.78) to ensure safe Firestore storage
         if (compressedBase64.length > 450000 && quality > 0.78) {
-          compressedBase64 = canvas.toDataURL('image/jpeg', 0.78);
+          compressedBase64 = canvas.toDataURL('image/jpeg', 0.80);
         }
 
         resolve(compressedBase64);
@@ -104,10 +104,10 @@ export const compressImage = (file, maxDimension = 1280, initialQuality = 0.85) 
 
 /**
  * Upload single image:
- * 1. Tries Firebase Storage first (timeout 5s).
- * 2. Tries ImgBB free cloud hosting if API key is provided.
- * 3. Falls back to high-fidelity 85% quality Canvas compression (1280px, quality 0.85).
- * App NEVER fails to upload images and images remain crisp & clear.
+ * 1. Tries ImgBB free cloud hosting if API key is provided (instant 100% original quality).
+ * 2. Tries Firebase Storage (if available).
+ * 3. Falls back to ultra-clear 86% quality Canvas compression (1440px, quality 0.86).
+ * App NEVER fails to upload images and new uploads remain crisp & crystal clear.
  */
 export const uploadProductImage = async (file, onProgress) => {
   const validation = validateImageFile(file);
@@ -115,25 +115,7 @@ export const uploadProductImage = async (file, onProgress) => {
     throw new Error(validation.error);
   }
 
-  // 1. Try Firebase Storage first with 5s timeout
-  if (isFirebaseConfigured && storage) {
-    try {
-      const fileExt = file.name ? file.name.split('.').pop() : 'jpg';
-      const fileName = `products/${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
-      const storageRef = ref(storage, fileName);
-
-      if (onProgress) onProgress(20);
-      const snapshot = await withTimeout(uploadBytes(storageRef, file), 5000);
-      if (onProgress) onProgress(70);
-      const downloadURL = await withTimeout(getDownloadURL(snapshot.ref), 5000);
-      if (onProgress) onProgress(100);
-      return downloadURL;
-    } catch (error) {
-      console.warn('Firebase Storage unavailable, trying next storage tier:', error.code || error.message);
-    }
-  }
-
-  // 2. Try ImgBB if configured
+  // 1. Try ImgBB if configured (fastest direct cloud link)
   if (import.meta.env.VITE_IMGBB_API_KEY) {
     if (onProgress) onProgress(30);
     const imgbbUrl = await uploadToImgBB(file);
@@ -143,16 +125,34 @@ export const uploadProductImage = async (file, onProgress) => {
     }
   }
 
-  // 3. High-fidelity 85% quality local compression (1280px, quality 0.85)
+  // 2. Try Firebase Storage if configured
+  if (isFirebaseConfigured && storage) {
+    try {
+      const fileExt = file.name ? file.name.split('.').pop() : 'jpg';
+      const fileName = `products/${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
+      const storageRef = ref(storage, fileName);
+
+      if (onProgress) onProgress(40);
+      const snapshot = await withTimeout(uploadBytes(storageRef, file), 3000);
+      if (onProgress) onProgress(75);
+      const downloadURL = await withTimeout(getDownloadURL(snapshot.ref), 3000);
+      if (onProgress) onProgress(100);
+      return downloadURL;
+    } catch (error) {
+      console.warn('Firebase Storage unavailable, using ultra-clear compression:', error.code || error.message);
+    }
+  }
+
+  // 3. Ultra-clear 86% quality local compression (1440px, quality 0.86)
   if (onProgress) onProgress(50);
-  const compressed = await compressImage(file, 1280, 0.85);
+  const compressed = await compressImage(file, 1440, 0.86);
   if (onProgress) onProgress(100);
   return compressed;
 };
 
 /**
  * Upload student verification document (Student Card / CCCD).
- * Uses 1400px resolution and 88% quality so student ID card numbers and stamps are 100% readable.
+ * Uses 1600px resolution and 88% quality so student ID card numbers and stamps are 100% readable.
  */
 export const uploadVerificationDocument = async (file, onProgress) => {
   const validation = validateImageFile(file);
@@ -160,27 +160,9 @@ export const uploadVerificationDocument = async (file, onProgress) => {
     throw new Error(validation.error);
   }
 
-  // 1. Try Firebase Storage first with 5s timeout
-  if (isFirebaseConfigured && storage) {
-    try {
-      const fileExt = file.name ? file.name.split('.').pop() : 'jpg';
-      const fileName = `verifications/${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
-      const storageRef = ref(storage, fileName);
-
-      if (onProgress) onProgress(30);
-      const snapshot = await withTimeout(uploadBytes(storageRef, file), 5000);
-      if (onProgress) onProgress(70);
-      const downloadURL = await withTimeout(getDownloadURL(snapshot.ref), 5000);
-      if (onProgress) onProgress(100);
-      return downloadURL;
-    } catch (error) {
-      console.warn('Firebase Storage verification upload unavailable, using high-definition compression:', error.code || error.message);
-    }
-  }
-
-  // 2. Try ImgBB if configured
+  // 1. Try ImgBB if configured
   if (import.meta.env.VITE_IMGBB_API_KEY) {
-    if (onProgress) onProgress(40);
+    if (onProgress) onProgress(30);
     const imgbbUrl = await uploadToImgBB(file);
     if (imgbbUrl) {
       if (onProgress) onProgress(100);
@@ -188,9 +170,27 @@ export const uploadVerificationDocument = async (file, onProgress) => {
     }
   }
 
-  // 3. High-definition 88% quality compression (1400px, quality 0.88)
+  // 2. Try Firebase Storage if configured
+  if (isFirebaseConfigured && storage) {
+    try {
+      const fileExt = file.name ? file.name.split('.').pop() : 'jpg';
+      const fileName = `verifications/${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
+      const storageRef = ref(storage, fileName);
+
+      if (onProgress) onProgress(40);
+      const snapshot = await withTimeout(uploadBytes(storageRef, file), 3000);
+      if (onProgress) onProgress(75);
+      const downloadURL = await withTimeout(getDownloadURL(snapshot.ref), 3000);
+      if (onProgress) onProgress(100);
+      return downloadURL;
+    } catch (error) {
+      console.warn('Firebase Storage verification upload unavailable, using ultra-clear compression:', error.code || error.message);
+    }
+  }
+
+  // 3. Ultra-clear 88% quality compression (1600px, quality 0.88)
   if (onProgress) onProgress(50);
-  const compressed = await compressImage(file, 1400, 0.88);
+  const compressed = await compressImage(file, 1600, 0.88);
   if (onProgress) onProgress(100);
   return compressed;
 };
