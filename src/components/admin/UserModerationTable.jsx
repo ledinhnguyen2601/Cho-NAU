@@ -153,16 +153,16 @@ export const UserModerationTable = ({
                     {/* Actions */}
                     <td className="px-4 py-3.5 text-right">
                       <div className="flex items-center justify-end gap-1.5">
-                        {/* Direct Verify Action if not verified */}
-                        {u.verificationStatus !== 'verified' && onApproveVerification && (
+                        {/* Only users with pending verification can be reviewed */}
+                        {u.verificationStatus === 'pending_verification' && (
                           <Button
-                            variant="success"
+                            variant="warning"
                             size="sm"
-                            leftIcon={<Check className="w-3.5 h-3.5" />}
-                            onClick={() => onApproveVerification(u.id)}
-                            title="Duyệt thẻ SV cho người này"
+                            leftIcon={<Eye className="w-3.5 h-3.5" />}
+                            onClick={() => setSelectedDocUser(u)}
+                            title="Xem giấy tờ và xét duyệt"
                           >
-                            Duyệt SV
+                            Xem & Duyệt
                           </Button>
                         )}
                         <Button
@@ -191,40 +191,62 @@ export const UserModerationTable = ({
         </div>
       </div>
 
-      {/* Document Preview Modal */}
+      {/* Document Review & Approval Modal */}
       <Modal
         isOpen={Boolean(selectedDocUser)}
         onClose={() => setSelectedDocUser(null)}
-        title={`Tài Liệu Xác Thực - ${selectedDocUser?.name || ''}`}
+        title={`Xét Duyệt Thẻ Sinh Viên - ${selectedDocUser?.name || ''}`}
         maxWidth="max-w-2xl"
       >
         <div className="space-y-4">
           <div className="rounded-2xl overflow-hidden border border-nau-border dark:border-nau-border bg-slate-100 dark:bg-nau-background max-h-[70vh] flex items-center justify-center p-2">
-            <img
-              src={selectedDocUser?.verificationDocument}
-              alt="Tài liệu xác thực"
-              className="max-h-[65vh] w-auto object-contain rounded-xl"
-            />
+            {selectedDocUser?.verificationDocument ? (
+              <img
+                src={selectedDocUser.verificationDocument}
+                alt="Tài liệu xác thực"
+                className="max-h-[65vh] w-auto object-contain rounded-xl"
+              />
+            ) : (
+              <p className="text-xs text-slate-400 p-8">Người dùng chưa đính kèm ảnh giấy tờ.</p>
+            )}
           </div>
-          <div className="flex justify-between items-center text-xs">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 text-xs border-t border-slate-100 dark:border-nau-border pt-3">
             <div>
               <p><strong>Mã SV:</strong> {selectedDocUser?.studentId || 'Chưa cung cấp'}</p>
               <p><strong>Khoa:</strong> {selectedDocUser?.faculty || 'Đại học Nghệ An'}</p>
+              <p><strong>Email:</strong> {selectedDocUser?.email}</p>
             </div>
-            {onApproveVerification && (
-              <div className="flex gap-2">
+            <div className="flex gap-2 w-full sm:w-auto justify-end">
+              {onRejectVerification && (
+                <Button
+                  variant="danger"
+                  size="sm"
+                  leftIcon={<X className="w-3.5 h-3.5" />}
+                  onClick={() => {
+                    const reason = window.prompt('Nhập lý do từ chối hồ sơ xác thực:', 'Ảnh chụp mờ hoặc thông tin không trùng khớp');
+                    if (reason) {
+                      onRejectVerification(selectedDocUser.id, reason);
+                      setSelectedDocUser(null);
+                    }
+                  }}
+                >
+                  Từ chối
+                </Button>
+              )}
+              {onApproveVerification && selectedDocUser?.verificationStatus === 'pending_verification' && (
                 <Button
                   variant="success"
                   size="sm"
+                  leftIcon={<Check className="w-3.5 h-3.5" />}
                   onClick={() => {
                     onApproveVerification(selectedDocUser.id);
                     setSelectedDocUser(null);
                   }}
                 >
-                  Duyệt ngay
+                  Duyệt Thẻ SV
                 </Button>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         </div>
       </Modal>

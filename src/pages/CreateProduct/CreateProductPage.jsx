@@ -154,7 +154,16 @@ export const CreateProductPage = () => {
       toast.success('Đăng tin bán sản phẩm thành công!');
       navigate(`/product/${newProd.id}`);
     } catch (err) {
-      toast.error('Không thể tạo sản phẩm. Vui lòng thử lại.');
+      console.error('Submit product error details:', err);
+      let errorMsg = 'Không thể tạo sản phẩm. Vui lòng thử lại.';
+      if (err.code === 'permission-denied') {
+        errorMsg = 'Quyền đăng bài bị từ chối: Tài khoản cần hoàn tất xác thực Thẻ sinh viên trước khi đăng bán.';
+      } else if (err.message && err.message.toLowerCase().includes('exceed')) {
+        errorMsg = 'Dung lượng dữ liệu quá lớn. Vui lòng chọn ảnh dung lượng nhẹ hơn.';
+      } else if (err.message) {
+        errorMsg = err.message;
+      }
+      toast.error(errorMsg);
     } finally {
       setIsSubmitting(false);
     }

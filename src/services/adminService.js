@@ -82,19 +82,34 @@ const ADMIN_EMAILS = [
 export const getUserOverrides = () => {
   try {
     const raw = localStorage.getItem('nau_user_overrides');
-    return raw ? JSON.parse(raw) : {};
+    if (!raw) return {};
+    const parsed = JSON.parse(raw);
+    let cleaned = false;
+    // Strip any stale verificationStatus so it never overrides Firestore truth
+    Object.keys(parsed).forEach(uid => {
+      if (parsed[uid] && parsed[uid].verificationStatus) {
+        delete parsed[uid].verificationStatus;
+        cleaned = true;
+      }
+    });
+    if (cleaned) {
+      localStorage.setItem('nau_user_overrides', JSON.stringify(parsed));
+    }
+    return parsed;
   } catch (e) {
     return {};
   }
 };
 
 /**
- * Helper to save a single user override
+ * Helper to save a single user override (status, role only - NEVER verificationStatus)
  */
 export const saveUserOverride = (userId, fields) => {
   try {
     const current = getUserOverrides();
-    current[userId] = { ...(current[userId] || {}), ...fields, updatedAt: new Date().toISOString() };
+    // Strictly omit verificationStatus: verification state must strictly reside in Firestore
+    const { verificationStatus, ...safeFields } = fields || {};
+    current[userId] = { ...(current[userId] || {}), ...safeFields, updatedAt: new Date().toISOString() };
     localStorage.setItem('nau_user_overrides', JSON.stringify(current));
     return current[userId];
   } catch (e) {
@@ -118,7 +133,7 @@ export const getAllUsers = async () => {
     }
   }
 
-  // Normalize admin accounts and apply local overrides
+  // Normalize admin accounts and apply local overrides (but NOT for verificationStatus)
   return usersList.map(u => {
     const email = (u.email || '').toLowerCase();
     const isSuperAdmin = ADMIN_EMAILS.includes(email);
@@ -127,10 +142,12 @@ export const getAllUsers = async () => {
     return {
       ...u,
       role: isSuperAdmin ? 'admin' : (userOverride.role || u.role || 'user'),
-      verificationStatus: isSuperAdmin ? 'verified' : (userOverride.verificationStatus || u.verificationStatus || 'new'),
+      // verificationStatus must come from Firestore only — never localStorage
+      // This prevents admin from "seeing" users as verified when they haven't submitted verification
+      verificationStatus: isSuperAdmin ? 'verified' : (u.verificationStatus || 'new'),
       status: userOverride.status || u.status || 'active',
-      studentId: isSuperAdmin ? (u.studentId || 'ADMIN-NAU') : (userOverride.studentId || u.studentId || ''),
-      faculty: isSuperAdmin ? (u.faculty || 'Đại học Nghệ An') : (userOverride.faculty || u.faculty || 'Đại học Nghệ An'),
+      studentId: isSuperAdmin ? (u.studentId || 'ADMIN-NAU') : (u.studentId || ''),
+      faculty: isSuperAdmin ? (u.faculty || 'Đại học Nghệ An') : (u.faculty || 'Đại học Nghệ An'),
       isOnline: u.isOnline === true || (u.lastActive && (Date.now() - new Date(u.lastActive).getTime()) < 5 * 60 * 1000)
     };
   });

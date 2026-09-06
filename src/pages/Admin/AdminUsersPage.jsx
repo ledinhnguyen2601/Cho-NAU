@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { getAllUsers, updateUserStatus, toggleUserRole } from '../../services/adminService';
-import { approveVerification } from '../../services/verificationService';
+import { approveVerification, rejectVerification } from '../../services/verificationService';
 import { UserModerationTable } from '../../components/admin/UserModerationTable';
 import { useToast } from '../../context/ToastContext';
 import { Users, Search, Filter } from 'lucide-react';
@@ -55,7 +55,17 @@ export const AdminUsersPage = () => {
       toast.success('Đã duyệt Thẻ sinh viên cho người dùng này!');
       loadUsers();
     } catch (e) {
-      toast.error('Không thể phê duyệt thẻ sinh viên.');
+      toast.error(e.message || 'Không thể phê duyệt thẻ sinh viên.');
+    }
+  };
+
+  const handleRejectVerification = async (userId, reason) => {
+    try {
+      await rejectVerification(userId, reason);
+      toast.warning('Đã từ chối hồ sơ xác thực.');
+      loadUsers();
+    } catch (e) {
+      toast.error(e.message || 'Không thể từ chối hồ sơ.');
     }
   };
 
@@ -118,6 +128,7 @@ export const AdminUsersPage = () => {
         onToggleStatus={handleToggleStatus}
         onToggleRole={handleToggleRole}
         onApproveVerification={handleApproveVerification}
+        onRejectVerification={handleRejectVerification}
       />
     </div>
   );

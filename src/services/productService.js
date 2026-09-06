@@ -1,5 +1,6 @@
 // File: src/services/productService.js
 import { 
+  auth,
   db, 
   collection, 
   doc, 
@@ -145,14 +146,26 @@ export const getProductById = async (id) => {
 export const createProduct = async (productData, currentUser) => {
   if (!isFirebaseConfigured || !db) throw new Error("Firebase chưa được cấu hình");
 
+  const uid = auth?.currentUser?.uid || currentUser?.id;
+  if (!uid) throw new Error("Bạn cần đăng nhập để đăng sản phẩm");
+
+  // Filter out any undefined fields to prevent Firestore serialization crashes
+  const cleanData = {};
+  Object.keys(productData).forEach(key => {
+    if (productData[key] !== undefined) {
+      cleanData[key] = productData[key];
+    }
+  });
+
   const newProduct = {
-    ...productData,
-    sellerId: currentUser.id,
-    sellerName: currentUser.name,
-    sellerAvatar: currentUser.avatar,
-    sellerRating: currentUser.rating || 5.0,
-    sellerRatingCount: currentUser.ratingCount || 0,
-    sellerVerified: currentUser.verificationStatus === 'verified',
+    ...cleanData,
+    sellerId: uid,
+    sellerName: currentUser?.name || auth?.currentUser?.displayName || 'Sinh viên NAU',
+    sellerAvatar: currentUser?.avatar || auth?.currentUser?.photoURL || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
+    sellerRating: Number(currentUser?.rating || 5.0),
+    sellerRatingCount: Number(currentUser?.ratingCount || 0),
+    sellerVerified: currentUser?.verificationStatus === 'verified' || currentUser?.role === 'admin',
+    price: Number(cleanData.price || 0),
     status: 'active',
     views: 0,
     saves: 0,

@@ -48,7 +48,7 @@ export const AdminVerificationsPage = () => {
       toast.success('Đã phê duyệt Thẻ sinh viên NAU thành công!');
       loadData();
     } catch (e) {
-      toast.error('Lỗi khi duyệt.');
+      toast.error(e.message || 'Lỗi khi duyệt.');
     }
   };
 
@@ -58,7 +58,7 @@ export const AdminVerificationsPage = () => {
       toast.warning('Đã từ chối hồ sơ xác thực.');
       loadData();
     } catch (e) {
-      toast.error('Lỗi khi từ chối.');
+      toast.error(e.message || 'Lỗi khi từ chối.');
     }
   };
 

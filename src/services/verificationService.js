@@ -1,4 +1,5 @@
 import { 
+  auth,
   db, 
   doc, 
   setDoc,
@@ -9,150 +10,125 @@ import {
   where,
   getDoc
 } from '../config/firebase';
-import { saveUserOverride, getUserOverrides } from './adminService';
 
 /**
  * Submit verification request for student card / CCCD
+ * Only users can submit their own verification.
  */
 export const submitVerification = async (userId, data) => {
+  const actualUid = auth?.currentUser?.uid || userId;
+  if (!actualUid) throw new Error("Chưa xác định được tài khoản người dùng.");
+
   const { name, studentId, faculty, documentUrl, phone } = data;
+  if (!documentUrl) {
+    throw new Error("Vui lòng đính kèm ảnh Thẻ sinh viên hoặc CCCD.");
+  }
+
   const updateData = {
-    userId,
+    userId: actualUid,
     ...(name ? { name } : {}),
-    studentId,
-    faculty,
+    studentId: (studentId || '').trim(),
+    faculty: (faculty || 'Đại học Nghệ An').trim(),
     verificationDocument: documentUrl,
     verificationStatus: 'pending_verification',
-    phone: phone || '',
+    phone: (phone || '').trim(),
     verificationSubmittedAt: new Date().toISOString()
   };
 
-  saveUserOverride(userId, updateData);
+  if (!db) throw new Error("Cơ sở dữ liệu chưa được kết nối.");
 
-  if (db) {
-    try {
-      const userRef = doc(db, 'users', userId);
-      await setDoc(userRef, {
-        ...(name ? { name } : {}),
-        studentId,
-        faculty,
-        verificationDocument: documentUrl,
-        verificationStatus: 'pending_verification',
-        phone: phone || '',
-        verificationSubmittedAt: updateData.verificationSubmittedAt
-      }, { merge: true });
+  try {
+    const userRef = doc(db, 'users', actualUid);
+    await setDoc(userRef, updateData, { merge: true });
 
-      // Also write to dedicated verifications collection for easy admin indexing
-      const verifRef = doc(db, 'verifications', userId);
-      await setDoc(verifRef, updateData, { merge: true });
-    } catch (e) {
-      console.warn('Firestore submitVerification cloud sync notice:', e);
-    }
+    // Also write to dedicated verifications collection for easy admin indexing
+    const verifRef = doc(db, 'verifications', actualUid);
+    await setDoc(verifRef, updateData, { merge: true });
+
+    return updateData;
+  } catch (e) {
+    console.error('Firestore submitVerification error:', e);
+    throw new Error(`Lỗi lưu hồ sơ lên hệ thống: ${e.message}`);
   }
-  return updateData;
 };
 
 /**
  * Admin approve verification request
+ * STRICT RULE: Only users who have actually submitted verification ('pending_verification')
+ * can be approved. Bypassing or "duyệt vượt quyền" is strictly blocked.
  */
 export const approveVerification = async (userId) => {
+  if (!db) throw new Error("Cơ sở dữ liệu chưa được kết nối.");
+
+  // Pre-check: Ensure user has actually submitted verification
+  const userRef = doc(db, 'users', userId);
+  const userSnap = await getDoc(userRef);
+  if (!userSnap.exists()) {
+    throw new Error("Không tìm thấy thông tin người dùng trên hệ thống.");
+  }
+
+  const userData = userSnap.data();
+  if (userData.verificationStatus !== 'pending_verification') {
+    throw new Error("Người dùng chưa gửi hồ sơ xác thực. Chỉ có thể duyệt khi người dùng đã gửi yêu cầu!");
+  }
+
   const updateData = {
     verificationStatus: 'verified',
     verifiedAt: new Date().toISOString(),
     verificationRejectionReason: null
   };
 
-  saveUserOverride(userId, updateData);
+  try {
+    await setDoc(userRef, updateData, { merge: true });
 
-  if (db) {
-    try {
-      const userRef = doc(db, 'users', userId);
-      await setDoc(userRef, updateData, { merge: true });
+    const verifRef = doc(db, 'verifications', userId);
+    await setDoc(verifRef, updateData, { merge: true });
 
-      const verifRef = doc(db, 'verifications', userId);
-      await setDoc(verifRef, updateData, { merge: true });
-    } catch (e) {
-      console.warn('Firestore approveVerification cloud sync notice:', e);
-    }
+    return { id: userId, ...userData, ...updateData };
+  } catch (e) {
+    console.error('Firestore approveVerification error:', e);
+    throw new Error(`Lỗi cập nhật trạng thái duyệt trên Firebase: ${e.message}`);
   }
-  return updateData;
 };
 
 /**
  * Admin reject verification request with reason
  */
 export const rejectVerification = async (userId, reason) => {
+  if (!db) throw new Error("Cơ sở dữ liệu chưa được kết nối.");
+
+  const userRef = doc(db, 'users', userId);
   const updateData = {
     verificationStatus: 'rejected',
     verificationRejectionReason: reason || 'Hình ảnh thẻ sinh viên hoặc CCCD không rõ nét, vui lòng chụp lại.'
   };
 
-  saveUserOverride(userId, updateData);
+  try {
+    await setDoc(userRef, updateData, { merge: true });
 
-  if (db) {
-    try {
-      const userRef = doc(db, 'users', userId);
-      await setDoc(userRef, updateData, { merge: true });
+    const verifRef = doc(db, 'verifications', userId);
+    await setDoc(verifRef, updateData, { merge: true });
 
-      const verifRef = doc(db, 'verifications', userId);
-      await setDoc(verifRef, updateData, { merge: true });
-    } catch (e) {
-      console.warn('Firestore rejectVerification cloud sync notice:', e);
-    }
+    return { id: userId, ...updateData };
+  } catch (e) {
+    console.error('Firestore rejectVerification error:', e);
+    throw new Error(`Lỗi cập nhật từ chối trên Firebase: ${e.message}`);
   }
-  return updateData;
 };
 
 /**
  * Get all users with pending verification
+ * Returns only genuine pending verification submissions from Firestore.
  */
 export const getPendingVerifications = async () => {
-  const overrides = getUserOverrides();
-  let usersList = [];
+  if (!db) return [];
 
-  if (db) {
-    try {
-      const qUsers = query(collection(db, 'users'), where('verificationStatus', '==', 'pending_verification'));
-      const userSnap = await getDocs(qUsers);
-      usersList = userSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-
-      // Also check verifications collection to merge
-      try {
-        const qVerif = query(collection(db, 'verifications'), where('verificationStatus', '==', 'pending_verification'));
-        const verifSnap = await getDocs(qVerif);
-        verifSnap.forEach(vDoc => {
-          const vData = vDoc.data();
-          const existingIdx = usersList.findIndex(u => u.id === vDoc.id);
-          if (existingIdx >= 0) {
-            usersList[existingIdx] = { ...usersList[existingIdx], ...vData };
-          } else {
-            usersList.push({ id: vDoc.id, ...vData });
-          }
-        });
-      } catch(err) {}
-    } catch (e) {
-      console.warn('Firestore getPendingVerifications warning:', e);
-    }
+  try {
+    const qUsers = query(collection(db, 'users'), where('verificationStatus', '==', 'pending_verification'));
+    const userSnap = await getDocs(qUsers);
+    return userSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  } catch (e) {
+    console.warn('Firestore getPendingVerifications warning:', e);
+    return [];
   }
-
-  // Merge with overrides
-  Object.keys(overrides).forEach(userId => {
-    const o = overrides[userId];
-    const existingIdx = usersList.findIndex(u => u.id === userId);
-    if (o.verificationStatus === 'pending_verification') {
-      if (existingIdx >= 0) {
-        usersList[existingIdx] = { ...usersList[existingIdx], ...o };
-      } else {
-        usersList.push({ id: userId, ...o });
-      }
-    } else if (o.verificationStatus && o.verificationStatus !== 'pending_verification') {
-      // If no longer pending in overrides, remove from pending list
-      if (existingIdx >= 0) {
-        usersList.splice(existingIdx, 1);
-      }
-    }
-  });
-
-  return usersList;
 };
-
