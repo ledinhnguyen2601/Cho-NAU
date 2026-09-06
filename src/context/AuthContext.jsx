@@ -167,7 +167,7 @@ export const AuthProvider = ({ children }) => {
     };
   }, []);
 
-  // Sign in with Google (using popup to avoid cross-origin partitioned sessionStorage error)
+  // Sign in with Google (using popup, with automatic redirect fallback for Cốc Cốc & mobile)
   const signInWithGoogle = async () => {
     if (isFirebaseConfigured && auth) {
       try {
@@ -175,11 +175,20 @@ export const AuthProvider = ({ children }) => {
         return result.user;
       } catch (error) {
         console.warn('Google Sign In Error:', error);
+        if (error.code === 'auth/unauthorized-domain') {
+          throw new Error(`Tên miền "${window.location.hostname}" chưa được cấp quyền đăng nhập trên Firebase Console. Vui lòng vào Firebase Console -> Authentication -> Settings -> Authorized domains để thêm tên miền này.`);
+        }
         if (error.code === 'auth/popup-closed-by-user' || error.code === 'auth/cancelled-popup-request') {
           throw new Error('Đã đóng cửa sổ đăng nhập Google.');
         }
         if (error.code === 'auth/popup-blocked') {
-          throw new Error('Trình duyệt đã chặn cửa sổ Popup. Vui lòng cho phép mở Popup trong cài đặt trình duyệt để đăng nhập.');
+          // Trình duyệt (Cốc Cốc / Safari / Mobile) chặn popup -> Tự động chuyển sang chế độ chuyển hướng (Redirect)
+          try {
+            await signInWithRedirect(auth, googleProvider);
+            return null;
+          } catch (redirectErr) {
+            throw new Error('Trình duyệt chặn mở cửa sổ. Vui lòng mở quyền Pop-up hoặc thử trình duyệt khác.');
+          }
         }
         if (error.code === 'auth/network-request-failed') {
           throw new Error('Lỗi kết nối mạng. Vui lòng kiểm tra lại kết nối Internet.');
