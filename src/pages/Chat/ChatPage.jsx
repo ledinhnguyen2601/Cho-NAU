@@ -10,6 +10,7 @@ import {
   markMessagesAsRead, 
   markAllConversationsAsRead,
   deleteConversation,
+  getMessagesOnce,
   subscribeToMessages 
 } from '../../services/chatService';
 import { ConversationList } from '../../components/chat/ConversationList';
@@ -30,6 +31,8 @@ export const ChatPage = () => {
 
   const [conversations, setConversations] = useState([]);
   const [activeConversation, setActiveConversation] = useState(null);
+  const [messages, setMessages] = useState([]);
+  const [isLoadingMessages, setIsLoadingMessages] = useState(false);
   const [searchFilter, setSearchFilter] = useState('');
   const [filterTag, setFilterTag] = useState('all'); // 'all' | 'unread' | 'trading'
   const [isLoading, setIsLoading] = useState(true);
@@ -74,11 +77,20 @@ export const ChatPage = () => {
     let unsubscribe = () => {};
     
     if (activeConversation?.id) {
+      setIsLoadingMessages(true);
+
+      // 1. Eager fetch immediately to prevent endless sync spinner
+      getMessagesOnce(activeConversation.id).then((initialMsgs) => {
+        setMessages(initialMsgs);
+        setIsLoadingMessages(false);
+      }).catch(() => {
+        setIsLoadingMessages(false);
+      });
+
+      // 2. Realtime listener
       unsubscribe = subscribeToMessages(activeConversation.id, (newMessages) => {
-        setActiveConversation(prev => {
-          if (!prev) return null;
-          return { ...prev, messages: newMessages };
-        });
+        setMessages(newMessages);
+        setIsLoadingMessages(false);
         
         // Also update the lastMessage in the conversations list visually
         if (newMessages.length > 0) {
@@ -95,12 +107,17 @@ export const ChatPage = () => {
           }));
         }
       });
+    } else {
+      setMessages([]);
+      setIsLoadingMessages(false);
     }
 
     return () => unsubscribe();
   }, [activeConversation?.id]);
 
   const handleSelectConversation = (conv) => {
+    // If clicking on the currently open conversation, keep it intact without reloading
+    if (activeConversation?.id === conv.id) return;
     setActiveConversation(conv);
     markMessagesAsRead(conv.id, currentUser.id);
     setSearchParams({ convId: conv.id });
@@ -277,6 +294,8 @@ export const ChatPage = () => {
       >
         <ChatWindow
           conversation={activeConversation}
+          messages={messages}
+          isLoadingMessages={isLoadingMessages}
           currentUserId={currentUser.id}
           isUserVerified={isVerified}
           onSendMessage={handleSendMessage}

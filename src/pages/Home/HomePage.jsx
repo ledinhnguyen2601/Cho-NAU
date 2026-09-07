@@ -61,7 +61,8 @@ export const HomePage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
-  const itemsPerPage = 8;
+  const [activeTab, setActiveTab] = useState('all');
+  const itemsPerPage = 10;
 
   // Sync state with URL params
   useEffect(() => {
@@ -102,6 +103,7 @@ export const HomePage = () => {
   };
 
   const handleResetFilters = () => {
+    setActiveTab('all');
     setFilters({
       search: '',
       category: 'all',
@@ -124,7 +126,7 @@ export const HomePage = () => {
   );
 
   return (
-    <div className="space-y-8 animate-fade-in">
+    <div className="space-y-6 sm:space-y-8 animate-fade-in">
       
       {/* Hero Banner Section - Phong cách trang nhã chuẩn Cổng người học NAU */}
       <section className="relative rounded-3xl overflow-hidden bg-gradient-to-br from-red-50/90 via-white to-red-50/40 dark:from-slate-900 dark:via-nau-surface dark:to-slate-900 border border-red-100/80 dark:border-nau-border p-6 sm:p-10 shadow-sm transition-colors">
@@ -173,53 +175,44 @@ export const HomePage = () => {
         </div>
       </section>
 
-      {/* Category Icons Bar */}
-      <section className="space-y-3">
-        <div className="flex items-center justify-between">
-          <h2 className="text-base font-bold text-nau-text dark:text-nau-text flex items-center gap-2">
+      {/* Category Icons Bar - Phong cách Chợ Tốt chuẩn (Gọn gàng, Icon trên chữ dưới) */}
+      <section className="bg-nau-surface dark:bg-nau-background rounded-2xl sm:rounded-3xl p-3 sm:p-4 border border-nau-border dark:border-nau-border shadow-xs space-y-2">
+        <div className="flex items-center justify-between px-1">
+          <h2 className="text-xs sm:text-sm font-bold text-nau-text dark:text-nau-text flex items-center gap-1.5">
             <Sparkles className="w-4 h-4 text-nau-red" />
-            <span>Danh Mục Sản Phẩm</span>
+            <span>Khám Phá Danh Mục NAU</span>
           </h2>
-          <button
-            onClick={() => {
-              handleCategorySelect('all');
-              const el = document.getElementById('marketplace-products');
-              if (el) el.scrollIntoView({ behavior: 'smooth' });
-            }}
-            className="text-xs font-bold text-nau-red dark:text-nau-red-hover hover:underline flex items-center gap-1 cursor-pointer"
-          >
-            <span>Tất cả danh mục</span>
-            <ArrowRight className="w-3.5 h-3.5" />
-          </button>
+          {filters.category !== 'all' && (
+            <button
+              onClick={() => handleCategorySelect('all')}
+              className="text-[11px] font-semibold text-nau-red dark:text-nau-red-hover hover:underline cursor-pointer"
+            >
+              Xem tất cả
+            </button>
+          )}
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
-          {/* Card: Tất cả sản phẩm */}
+        {/* Scrollable category ribbon */}
+        <div className="flex items-start gap-2 sm:gap-4 overflow-x-auto no-scrollbar py-1 px-1">
+          {/* Item: Tất cả */}
           <button
             onClick={() => handleCategorySelect('all')}
-            className={`flex items-center gap-3 p-3 rounded-2xl border transition-all text-left group cursor-pointer ${
+            className={`flex flex-col items-center gap-1.5 p-2 rounded-2xl transition-all shrink-0 cursor-pointer min-w-[72px] sm:min-w-[82px] group ${
               filters.category === 'all' || !filters.category
-                ? 'bg-nau-red text-white border-nau-red shadow-md shadow-nau-red/20'
-                : 'bg-nau-surface dark:bg-nau-background border-nau-border/80 dark:border-nau-border text-nau-text dark:text-nau-text-secondary hover:border-nau-red/40 hover:shadow-xs'
+                ? 'text-nau-red dark:text-nau-red-hover font-bold'
+                : 'text-nau-text-secondary dark:text-nau-text-muted hover:text-nau-text'
             }`}
           >
-            <div
-              className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 transition-colors ${
-                filters.category === 'all' || !filters.category
-                  ? 'bg-white/20 text-white'
-                  : 'bg-nau-red-light dark:bg-nau-red-dark/20 text-nau-red dark:text-nau-red-hover group-hover:bg-nau-red group-hover:text-white'
-              }`}
-            >
-              <LayoutGrid className="w-5 h-5" />
+            <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all ${
+              filters.category === 'all' || !filters.category
+                ? 'bg-nau-red text-white shadow-md shadow-nau-red/25 scale-105'
+                : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 group-hover:bg-red-50 group-hover:text-nau-red'
+            }`}>
+              <LayoutGrid className="w-6 h-6" />
             </div>
-            <div className="min-w-0">
-              <p className="text-xs font-bold truncate leading-tight">
-                Tất cả sản phẩm
-              </p>
-              <p className={`text-[10px] ${filters.category === 'all' || !filters.category ? 'text-white/80' : 'text-slate-400'}`}>
-                Toàn bộ tin đăng
-              </p>
-            </div>
+            <span className="text-[11px] sm:text-xs text-center leading-tight truncate w-full">
+              Tất cả
+            </span>
           </button>
 
           {INITIAL_CATEGORIES.map((cat) => {
@@ -230,107 +223,181 @@ export const HomePage = () => {
               <button
                 key={cat.id}
                 onClick={() => handleCategorySelect(cat.id)}
-                className={`flex items-center gap-3 p-3 rounded-2xl border transition-all text-left group cursor-pointer ${
+                className={`flex flex-col items-center gap-1.5 p-2 rounded-2xl transition-all shrink-0 cursor-pointer min-w-[72px] sm:min-w-[84px] group ${
                   isSelected
-                    ? 'bg-nau-red text-white border-nau-red shadow-md shadow-nau-red/20'
-                    : 'bg-nau-surface dark:bg-nau-background border-nau-border/80 dark:border-nau-border text-nau-text dark:text-nau-text-secondary hover:border-nau-red/40 hover:shadow-xs'
+                    ? 'text-nau-red dark:text-nau-red-hover font-bold'
+                    : 'text-nau-text-secondary dark:text-nau-text-muted hover:text-nau-text'
                 }`}
               >
-                <div
-                  className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 transition-colors ${
-                    isSelected
-                      ? 'bg-white/20 text-white'
-                      : 'bg-nau-red-light dark:bg-nau-red-dark/20 text-nau-red dark:text-nau-red-hover group-hover:bg-nau-red group-hover:text-white'
-                  }`}
-                >
-                  <IconComponent className="w-5 h-5" />
+                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all ${
+                  isSelected
+                    ? 'bg-nau-red text-white shadow-md shadow-nau-red/25 scale-105'
+                    : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 group-hover:bg-red-50 group-hover:text-nau-red'
+                }`}>
+                  <IconComponent className="w-6 h-6" />
                 </div>
-                <div className="min-w-0">
-                  <p className="text-xs font-bold truncate leading-tight">
-                    {cat.name}
-                  </p>
-                  <p className={`text-[10px] ${isSelected ? 'text-white/80' : 'text-slate-400'}`}>
-                    Danh mục NAU
-                  </p>
-                </div>
+                <span className="text-[11px] sm:text-xs text-center leading-tight truncate w-full">
+                  {cat.name}
+                </span>
               </button>
             );
           })}
         </div>
       </section>
 
-      {/* Main Marketplace Content: Filter Sidebar + Products Grid */}
-      <section id="marketplace-products" className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+      {/* Marketplace Section - Tối ưu trọn vẹn bề ngang chuẩn Chợ Tốt (Không bị thanh sidebar che khuất) */}
+      <section id="marketplace-products" className="space-y-4">
         
-        {/* Desktop Filter Sidebar */}
-        <div className="hidden lg:block lg:col-span-1">
-          <div className="sticky top-24">
-            <ProductFilters
-              filters={filters}
-              onChange={setFilters}
-              onReset={handleResetFilters}
-            />
-          </div>
-        </div>
-
-        {/* Mobile Filter Toggle Button */}
-        <div className="lg:hidden flex items-center justify-between bg-nau-surface dark:bg-nau-background p-3 rounded-2xl border border-nau-border dark:border-nau-border">
-          <span className="text-xs font-bold text-nau-text dark:text-nau-text-secondary">
-            {products.length} sản phẩm phù hợp
-          </span>
-          <button
-            onClick={() => setIsMobileFilterOpen(true)}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-nau-red text-white text-xs font-bold rounded-xl shadow-xs"
-          >
-            <SlidersHorizontal className="w-3.5 h-3.5" />
-            <span>Lọc sản phẩm</span>
-          </button>
-        </div>
-
-        {/* Mobile Filter Modal Drawer */}
-        {isMobileFilterOpen && (
-          <div className="fixed inset-0 z-50 overflow-y-auto lg:hidden">
-            <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => setIsMobileFilterOpen(false)} />
-            <div className="relative min-h-screen p-4 flex items-center justify-center">
-              <div className="w-full max-w-md bg-nau-surface dark:bg-nau-background rounded-2xl p-4 z-10 space-y-4">
-                <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-nau-border">
-                  <h3 className="font-bold text-sm">Bộ lọc tìm kiếm</h3>
-                  <button onClick={() => setIsMobileFilterOpen(false)} className="p-1 text-slate-400">
-                    <X className="w-5 h-5" />
-                  </button>
-                </div>
-                <ProductFilters
-                  filters={filters}
-                  onChange={setFilters}
-                  onReset={handleResetFilters}
-                />
-                <button
-                  onClick={() => setIsMobileFilterOpen(false)}
-                  className="w-full py-2.5 bg-nau-red text-white text-xs font-bold rounded-xl shadow-md shadow-nau-red/25"
-                >
-                  Áp dụng bộ lọc
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Products Grid & Sorting Bar */}
-        <div className="lg:col-span-3 space-y-4">
+        {/* Chợ Tốt Style Top Filters & Tabs Bar */}
+        <div className="bg-nau-surface dark:bg-nau-background rounded-2xl sm:rounded-3xl p-3 sm:p-4 border border-nau-border/80 dark:border-nau-border shadow-xs space-y-3">
           
-          {/* Top Bar: Results Count & Sort Dropdown */}
-          <div className="flex flex-wrap items-center justify-between gap-3 bg-nau-surface dark:bg-nau-background p-3.5 rounded-2xl border border-nau-border/80 dark:border-nau-border shadow-sm">
-            <div className="text-xs font-semibold text-nau-text-secondary dark:text-nau-text-muted">
-              Hiển thị <span className="font-bold text-nau-text dark:text-nau-text">{products.length}</span> tin đăng đồ cũ sinh viên
-              {filters.search && <span className="italic"> cho từ khóa "{filters.search}"</span>}
+          {/* Row 1: Tabs phân loại Chợ Tốt */}
+          <div className="flex items-center justify-between flex-wrap gap-2 border-b border-slate-100 dark:border-nau-border pb-2.5">
+            <div className="flex items-center gap-1 overflow-x-auto no-scrollbar">
+              <button
+                onClick={() => {
+                  setActiveTab('all');
+                  setFilters(prev => ({ ...prev, minPrice: '', maxPrice: '', verifiedOnly: false }));
+                }}
+                className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
+                  activeTab === 'all'
+                    ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-xs'
+                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+                }`}
+              >
+                Dành cho bạn
+              </button>
+              <button
+                onClick={() => {
+                  setActiveTab('newest');
+                  setFilters(prev => ({ ...prev, sortBy: 'newest' }));
+                }}
+                className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
+                  activeTab === 'newest'
+                    ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-xs'
+                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+                }`}
+              >
+                Mới nhất
+              </button>
+              <button
+                onClick={() => {
+                  setActiveTab('student_price');
+                  setFilters(prev => ({ ...prev, maxPrice: '100000', minPrice: '' }));
+                }}
+                className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
+                  activeTab === 'student_price'
+                    ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-xs'
+                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+                }`}
+              >
+                Giá sinh viên (&le; 100k)
+              </button>
+              <button
+                onClick={() => {
+                  setActiveTab('verified');
+                  setFilters(prev => ({ ...prev, verifiedOnly: true }));
+                }}
+                className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
+                  activeTab === 'verified'
+                    ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-xs'
+                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+                }`}
+              >
+                Đã xác thực SV NAU
+              </button>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="text-xs text-slate-500 hidden sm:block">
+              Có <span className="font-bold text-nau-text dark:text-white">{products.length}</span> tin đăng
+            </div>
+          </div>
+
+          {/* Row 2: Bộ lọc nhanh thả xuống (Dropdowns) */}
+          <div className="flex flex-wrap items-center justify-between gap-2.5 pt-0.5">
+            <div className="flex flex-wrap items-center gap-2">
+              
+              {/* Chọn Khu vực NAU */}
+              <select
+                value={filters.location || 'all'}
+                onChange={(e) => setFilters(prev => ({ ...prev, location: e.target.value }))}
+                className="px-3 py-1.5 text-xs font-medium rounded-xl border border-nau-border dark:border-nau-border bg-nau-background dark:bg-nau-background text-nau-text dark:text-nau-text focus:outline-none focus:ring-1 focus:ring-nau-red"
+              >
+                <option value="all">Khu vực: Tất cả</option>
+                <option value="Cơ sở 1">Cơ sở 1 NAU (Hưng Dũng)</option>
+                <option value="KTX">Ký Túc Xá NAU</option>
+                <option value="Phong Định Cảng">Phong Định Cảng</option>
+                <option value="Nguyễn Viết Xuân">Nguyễn Viết Xuân</option>
+                <option value="Cổng trường">Cổng trường</option>
+              </select>
+
+              {/* Chọn Khoảng giá */}
+              <select
+                value={
+                  filters.maxPrice === '100000' && !filters.minPrice
+                    ? '<100k'
+                    : filters.minPrice === '100000' && filters.maxPrice === '500000'
+                    ? '100k-500k'
+                    : filters.minPrice === '500000'
+                    ? '>500k'
+                    : 'all'
+                }
+                onChange={(e) => {
+                  const val = e.target.value;
+                  if (val === '<100k') setFilters(prev => ({ ...prev, minPrice: '', maxPrice: '100000' }));
+                  else if (val === '100k-500k') setFilters(prev => ({ ...prev, minPrice: '100000', maxPrice: '500000' }));
+                  else if (val === '>500k') setFilters(prev => ({ ...prev, minPrice: '500000', maxPrice: '' }));
+                  else setFilters(prev => ({ ...prev, minPrice: '', maxPrice: '' }));
+                }}
+                className="px-3 py-1.5 text-xs font-medium rounded-xl border border-nau-border dark:border-nau-border bg-nau-background dark:bg-nau-background text-nau-text dark:text-nau-text focus:outline-none focus:ring-1 focus:ring-nau-red"
+              >
+                <option value="all">Khoảng giá: Tất cả</option>
+                <option value="<100k">Dưới 100.000đ</option>
+                <option value="100k-500k">100.000đ - 500.000đ</option>
+                <option value=">500k">Trên 500.000đ</option>
+              </select>
+
+              {/* Chọn Tình trạng */}
+              <select
+                value={filters.condition || 'all'}
+                onChange={(e) => setFilters(prev => ({ ...prev, condition: e.target.value }))}
+                className="px-3 py-1.5 text-xs font-medium rounded-xl border border-nau-border dark:border-nau-border bg-nau-background dark:bg-nau-background text-nau-text dark:text-nau-text focus:outline-none focus:ring-1 focus:ring-nau-red"
+              >
+                <option value="all">Tình trạng: Tất cả</option>
+                <option value="Mới">Mới 100%</option>
+                <option value="Như mới">Như mới (95-99%)</option>
+                <option value="Rất tốt">Rất tốt (85-90%)</option>
+                <option value="Đã sử dụng">Đã sử dụng</option>
+              </select>
+
+              {/* Nút Bộ lọc chi tiết */}
+              <button
+                onClick={() => setIsMobileFilterOpen(true)}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-xl border border-nau-border dark:border-nau-border hover:border-nau-red text-nau-text-secondary hover:text-nau-red transition-colors"
+                title="Mở thêm bộ lọc chi tiết"
+              >
+                <SlidersHorizontal className="w-3.5 h-3.5" />
+                <span>Bộ lọc khác</span>
+              </button>
+
+              {/* Nút Đặt lại nếu đang có bộ lọc */}
+              {(filters.category !== 'all' || filters.minPrice || filters.maxPrice || filters.condition !== 'all' || filters.location !== 'all' || filters.verifiedOnly || filters.search) && (
+                <button
+                  onClick={handleResetFilters}
+                  className="text-xs text-nau-red dark:text-nau-red-hover hover:underline font-semibold ml-1 cursor-pointer"
+                >
+                  Xóa lọc
+                </button>
+              )}
+            </div>
+
+            {/* Sắp xếp */}
+            <div className="flex items-center gap-1.5 ml-auto">
               <span className="text-xs text-nau-text-muted hidden sm:inline">Sắp xếp:</span>
               <select
                 value={filters.sortBy}
                 onChange={(e) => setFilters(prev => ({ ...prev, sortBy: e.target.value }))}
-                className="px-3 py-1.5 text-xs font-medium rounded-xl border border-nau-border dark:border-nau-border bg-nau-background dark:bg-nau-background text-nau-text dark:text-nau-text focus:outline-none focus:border-nau-red focus:ring-2 focus:ring-nau-red/20"
+                className="px-3 py-1.5 text-xs font-medium rounded-xl border border-nau-border dark:border-nau-border bg-nau-background dark:bg-nau-background text-nau-text dark:text-nau-text focus:outline-none focus:ring-1 focus:ring-nau-red"
               >
                 <option value="newest">Mới đăng nhất</option>
                 <option value="price_asc">Giá tăng dần</option>
@@ -340,16 +407,49 @@ export const HomePage = () => {
             </div>
           </div>
 
-          {/* Product Grid */}
-          <ProductGrid
-            products={paginatedProducts}
-            isLoading={isLoading}
-            onResetFilters={handleResetFilters}
-            currentPage={currentPage}
-            totalPages={totalPages}
-            onPageChange={setCurrentPage}
-          />
         </div>
+
+        {/* Modal Bộ lọc chi tiết (Popup gọn gàng, không làm hẹp lưới sản phẩm) */}
+        {isMobileFilterOpen && (
+          <div className="fixed inset-0 z-50 overflow-y-auto">
+            <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => setIsMobileFilterOpen(false)} />
+            <div className="relative min-h-screen p-4 flex items-center justify-center">
+              <div className="w-full max-w-md bg-nau-surface dark:bg-nau-background rounded-3xl p-5 z-10 space-y-4 shadow-xl border border-nau-border dark:border-nau-border">
+                <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-nau-border">
+                  <h3 className="font-bold text-sm text-nau-text dark:text-white flex items-center gap-2">
+                    <SlidersHorizontal className="w-4 h-4 text-nau-red" />
+                    <span>Bộ lọc sản phẩm chi tiết</span>
+                  </h3>
+                  <button onClick={() => setIsMobileFilterOpen(false)} className="p-1 rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800">
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+                <ProductFilters
+                  filters={filters}
+                  onChange={setFilters}
+                  onReset={handleResetFilters}
+                  hideCategories={true}
+                />
+                <button
+                  onClick={() => setIsMobileFilterOpen(false)}
+                  className="w-full py-2.5 bg-nau-red hover:bg-nau-red-hover text-white text-xs font-bold rounded-xl shadow-md shadow-nau-red/25 transition-colors"
+                >
+                  Áp dụng bộ lọc
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Lưới sản phẩm - Tràn viền rộng rãi 4-5 cột trên PC chuẩn Chợ Tốt */}
+        <ProductGrid
+          products={paginatedProducts}
+          isLoading={isLoading}
+          onResetFilters={handleResetFilters}
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={setCurrentPage}
+        />
 
       </section>
 

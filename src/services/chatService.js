@@ -297,22 +297,49 @@ export const deleteConversation = async (conversationId) => {
 };
 
 /**
+ * Get messages once (eager fetch)
+ */
+export const getMessagesOnce = async (conversationId) => {
+  if (!isFirebaseConfigured || !db || !conversationId) return [];
+  try {
+    const q = query(
+      collection(db, `conversations/${conversationId}/messages`),
+      orderBy('timestamp', 'asc')
+    );
+    const snap = await getDocs(q);
+    return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  } catch (e) {
+    console.warn('getMessagesOnce warning:', e);
+    return [];
+  }
+};
+
+/**
  * Listen to messages in a conversation
  */
 export const subscribeToMessages = (conversationId, callback) => {
-  if (!isFirebaseConfigured || !db) return () => {};
+  if (!isFirebaseConfigured || !db || !conversationId) return () => {};
   
-  const q = query(
-    collection(db, `conversations/${conversationId}/messages`),
-    orderBy('timestamp', 'asc')
-  );
-  
-  return onSnapshot(q, (snapshot) => {
-    const messages = snapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data()
-    }));
-    callback(messages);
-  });
+  try {
+    const q = query(
+      collection(db, `conversations/${conversationId}/messages`),
+      orderBy('timestamp', 'asc')
+    );
+    
+    return onSnapshot(q, (snapshot) => {
+      const messages = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+      callback(messages);
+    }, (error) => {
+      console.warn('subscribeToMessages error:', error);
+      callback([]);
+    });
+  } catch (err) {
+    console.warn('subscribeToMessages catch:', err);
+    callback([]);
+    return () => {};
+  }
 };
 

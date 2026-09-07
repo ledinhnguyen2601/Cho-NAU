@@ -18,6 +18,8 @@ import {
 
 export const ChatWindow = ({
   conversation,
+  messages: externalMessages,
+  isLoadingMessages = false,
   currentUserId,
   isUserVerified,
   onSendMessage,
@@ -27,6 +29,8 @@ export const ChatWindow = ({
   const messagesContainerRef = useRef(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  const messages = externalMessages !== undefined ? externalMessages : (conversation?.messages || []);
 
   const scrollToBottom = (smooth = true) => {
     if (messagesContainerRef.current) {
@@ -45,7 +49,7 @@ export const ChatWindow = ({
   // Smooth scroll to bottom when new messages arrive
   useEffect(() => {
     scrollToBottom(true);
-  }, [conversation?.messages]);
+  }, [messages.length, messages[messages.length - 1]?.id]);
 
   if (!conversation) {
     return (
@@ -163,18 +167,18 @@ export const ChatWindow = ({
         ref={messagesContainerRef}
         className="flex-1 min-w-0 overflow-y-auto p-3 sm:p-4 space-y-1 overscroll-contain"
       >
-        {conversation.messages === undefined ? (
+        {isLoadingMessages && messages.length === 0 ? (
           <div className="h-full flex flex-col items-center justify-center text-center p-6 text-slate-400">
             <div className="w-5 h-5 border-2 border-nau-primary border-t-transparent rounded-full animate-spin mb-2" />
             <p className="text-xs font-medium">Đang đồng bộ tin nhắn...</p>
           </div>
-        ) : conversation.messages.length === 0 ? (
+        ) : messages.length === 0 ? (
           <div className="h-full flex flex-col items-center justify-center text-center p-6 text-slate-400 max-w-sm mx-auto">
             <p className="text-xs font-medium text-slate-600 dark:text-slate-300">Bắt đầu cuộc trò chuyện với người bán.</p>
             <p className="text-[11px] text-slate-400 mt-1">Lưu ý: Không chuyển tiền cọc qua tài khoản cá nhân khi chưa gặp mặt xem đồ.</p>
           </div>
         ) : (
-          (conversation.messages || []).map((msg) => (
+          messages.map((msg) => (
             <MessageBubble
               key={msg.id}
               message={msg}

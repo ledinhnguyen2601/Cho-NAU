@@ -14,7 +14,8 @@ import {
 export const ProductFilters = ({
   filters,
   onChange,
-  onReset
+  onReset,
+  hideCategories = false
 }) => {
   const updateFilter = (key, value) => {
     onChange({ ...filters, [key]: value });
@@ -38,7 +39,8 @@ export const ProductFilters = ({
         </button>
       </div>
 
-      {/* Categories */}
+      {/* Categories (hidden if selected in top bar) */}
+      {!hideCategories && (
       <div>
         <label className="block text-xs font-bold text-nau-text dark:text-nau-text uppercase tracking-wider mb-2.5">
           Danh mục
@@ -69,6 +71,7 @@ export const ProductFilters = ({
           ))}
         </div>
       </div>
+      )}
 
       {/* Price Range */}
       <div>
