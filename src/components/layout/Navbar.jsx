@@ -4,6 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
 import { useToast } from '../../context/ToastContext';
 import { ThemeToggle } from '../common/ThemeToggle';
+import { NauBrandLogo } from '../brand/NauBrandLogo';
 import { getUnreadConversationsCount, subscribeToUnreadCount } from '../../services/chatService';
 import { 
   Search, 
@@ -79,22 +80,14 @@ export const Navbar = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16 gap-3">
           
-          {/* Brand Logo - Chuẩn nhận diện NAU */}
-          <Link to="/" className="flex items-center gap-2.5 shrink-0 group">
-            <div className="w-10 h-10 rounded-xl bg-white border-2 border-nau-blue flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform overflow-hidden relative">
-              <div className="flex items-center justify-center font-black tracking-tighter text-sm select-none">
-                <span className="text-nau-blue">N</span>
-                <span className="text-nau-red text-base -mx-0.5">A</span>
-                <span className="text-nau-blue">U</span>
-              </div>
-            </div>
-            <div>
-              <div className="flex items-center gap-1">
-                <span className="text-xl font-black tracking-tight text-nau-text dark:text-white">
-                  CHỢ <span className="text-nau-red">NAU</span>
-                </span>
-              </div>
-              <span className="hidden sm:block text-[10px] font-bold text-nau-blue dark:text-nau-blue-light uppercase tracking-wider -mt-0.5">
+          {/* Brand Logo - Chuẩn nhận diện NAU với 3 cánh sen và font Times New Roman Bold Italic */}
+          <Link to="/" className="flex items-center gap-1.5 shrink-0 group py-1" title="Chợ NAU - Sàn Đồ Cũ Sinh Viên Đại Học Nghệ An">
+            <NauBrandLogo size="sm" />
+            <div className="hidden lg:block border-l border-slate-200 dark:border-slate-700 pl-2.5 ml-0.5">
+              <span className="block text-xs font-black tracking-tight text-nau-text dark:text-white uppercase leading-none">
+                CHỢ <span className="text-nau-red">NAU</span>
+              </span>
+              <span className="block text-[9px] font-bold text-nau-blue dark:text-nau-blue-light uppercase tracking-wider mt-0.5 leading-none">
                 Sàn Đồ Cũ Sinh Viên
               </span>
             </div>

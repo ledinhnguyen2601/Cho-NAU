@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ShieldCheck, Heart, MapPin, Mail, Phone, ExternalLink } from 'lucide-react';
 import { getSystemSettings } from '../../services/adminService';
+import { NauBrandLogo } from '../brand/NauBrandLogo';
 
 export const Footer = () => {
   const [settings, setSettings] = useState({
@@ -35,13 +36,8 @@ export const Footer = () => {
           
           {/* Col 1: About NAU Market */}
           <div>
-            <div className="flex items-center gap-2.5 mb-4">
-              <div className="w-8 h-8 rounded-lg bg-nau-primary flex items-center justify-center text-white font-black text-sm">
-                NAU
-              </div>
-              <span className="text-lg font-black text-nau-text dark:text-nau-text uppercase">
-                {settings.siteName}
-              </span>
+            <div className="mb-3">
+              <NauBrandLogo size="md" />
             </div>
             <p className="text-xs text-nau-text-muted dark:text-nau-text-muted leading-relaxed mb-4">
               {settings.siteSlogan}

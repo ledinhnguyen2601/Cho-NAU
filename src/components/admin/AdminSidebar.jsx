@@ -1,6 +1,7 @@
 // File: src/components/admin/AdminSidebar.jsx
 import React from 'react';
 import { NavLink, Link } from 'react-router-dom';
+import { NauBrandLogo } from '../brand/NauBrandLogo';
 import { 
   LayoutDashboard, 
   Users, 
@@ -42,19 +43,13 @@ export const AdminSidebar = ({ isOpen, onClose }) => {
       >
         {/* Header / Brand */}
         <div className="h-16 px-6 flex items-center justify-between border-b border-slate-100 dark:border-nau-border">
-          <Link to="/admin" className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-white border-2 border-nau-blue flex items-center justify-center shadow-xs overflow-hidden">
-              <div className="flex items-center justify-center font-black tracking-tighter text-xs select-none">
-                <span className="text-nau-blue">N</span>
-                <span className="text-nau-red text-sm -mx-0.5">A</span>
-                <span className="text-nau-blue">U</span>
-              </div>
-            </div>
-            <div>
-              <span className="text-sm font-black text-nau-text dark:text-nau-text tracking-tight">
+          <Link to="/admin" className="flex items-center gap-2">
+            <NauBrandLogo size="sm" />
+            <div className="border-l border-slate-200 dark:border-slate-700 pl-2 ml-1">
+              <span className="text-xs font-black text-nau-text dark:text-nau-text tracking-tight uppercase block leading-none">
                 ADMIN SAAS
               </span>
-              <span className="block text-[10px] font-bold text-nau-red dark:text-nau-red-hover">
+              <span className="block text-[9px] font-bold text-nau-red dark:text-nau-red-hover uppercase tracking-wider mt-0.5 leading-none">
                 Chợ NAU Portal
               </span>
             </div>

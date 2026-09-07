@@ -3,215 +3,163 @@ import React from 'react';
 
 /**
  * NauLoadingLogo - Component hiển thị Logo động chuẩn nhận diện Trường Đại học Nghệ An (NAU)
- * Thiết kế chính xác theo biển hiệu trường:
- * - 3 cánh sen đỏ bên trái chuyển động vươn nở (staggered petal wave)
- * - Chữ NAU cách điệu in nghiêng (N xanh, A đỏ, U xanh)
- * - Tên trường "TRƯỜNG ĐẠI HỌC NGHỆ AN - NGHE AN UNIVERSITY"
- * - Hoàn toàn độc lập, có thể sao chép sang dự án web khác để tái sử dụng ngay.
- * 
- * Props:
- * @param {'sm' | 'md' | 'lg' | 'fullscreen'} size - Kích cỡ hiển thị
- * @param {string} text - Dòng chữ thông báo tải (mặc định: 'Đang tải dữ liệu...')
- * @param {boolean} showSubtitle - Hiển thị tên trường bên dưới logo
- * @param {string} className - Lớp CSS tùy biến bao ngoài
+ * Thiết kế chính xác theo thực tế:
+ * - 3 cánh sen Làng Sen (quê Bác Hồ) uốn lượn mềm mại vươn lên thành đóa sen hé nở, chuyển động tuần tự
+ * - Khối chữ "NAU" in hoa nghiêng bằng font Times New Roman Bold Italic với chân chữ cong nhẹ nhàng
+ * - Không có chữ phụ, chỉ tập trung vào biểu tượng cánh sen và logo NAU
  */
 export const NauLoadingLogo = ({
-  size = 'md',
+  size = 'md', // 'sm' | 'md' | 'lg' | 'fullscreen'
   text = 'Đang tải dữ liệu...',
-  showSubtitle = true,
   className = ''
 }) => {
-  // Quy đổi kích cỡ
   const sizeMap = {
-    sm: { width: 150, height: 52, fontSize: 'text-[11px]' },
-    md: { width: 220, height: 76, fontSize: 'text-xs' },
-    lg: { width: 300, height: 104, fontSize: 'text-sm' },
-    fullscreen: { width: 260, height: 90, fontSize: 'text-sm' }
+    sm: { width: 120, height: 48, fontSize: 'text-[11px]' },
+    md: { width: 175, height: 68, fontSize: 'text-xs' },
+    lg: { width: 230, height: 88, fontSize: 'text-sm' },
+    fullscreen: { width: 210, height: 80, fontSize: 'text-sm' }
   };
 
   const currentSize = sizeMap[size] || sizeMap.md;
 
   const content = (
     <div className={`flex flex-col items-center justify-center select-none ${className}`}>
-      {/* Keyframe Styles nhúng trực tiếp để component hoàn toàn độc lập khi tái sử dụng */}
+      {/* Keyframe Styles cho chuyển động cánh sen mềm mại tự nhiên */}
       <style>{`
-        @keyframes nau-petal-wave-1 {
-          0%, 100% { transform: scale(1) rotate(0deg); opacity: 0.85; filter: drop-shadow(0 0 0px rgba(220,38,38,0)); }
-          50% { transform: scale(1.08) rotate(-2deg); opacity: 1; filter: drop-shadow(0 2px 6px rgba(220,38,38,0.5)); }
+        @keyframes nau-lotus-wave-1 {
+          0%, 100% { transform: scale(1) rotate(0deg); opacity: 0.9; }
+          50% { transform: scale(1.06) rotate(-1.5deg); opacity: 1; filter: drop-shadow(0 2px 6px rgba(220,38,38,0.4)); }
         }
-        @keyframes nau-petal-wave-2 {
-          0%, 100% { transform: scale(1) rotate(0deg); opacity: 0.9; filter: drop-shadow(0 0 0px rgba(220,38,38,0)); }
-          50% { transform: scale(1.12) rotate(3deg); opacity: 1; filter: drop-shadow(0 2px 8px rgba(220,38,38,0.6)); }
+        @keyframes nau-lotus-wave-2 {
+          0%, 100% { transform: scale(1) rotate(0deg); opacity: 0.92; }
+          50% { transform: scale(1.08) rotate(2deg); opacity: 1; filter: drop-shadow(0 2px 7px rgba(220,38,38,0.5)); }
         }
-        @keyframes nau-petal-wave-3 {
-          0%, 100% { transform: scale(1) rotate(0deg); opacity: 0.85; filter: drop-shadow(0 0 0px rgba(220,38,38,0)); }
-          50% { transform: scale(1.1) rotate(2deg); opacity: 1; filter: drop-shadow(0 2px 7px rgba(220,38,38,0.5)); }
+        @keyframes nau-lotus-wave-3 {
+          0%, 100% { transform: scale(1) rotate(0deg); opacity: 0.9; }
+          50% { transform: scale(1.07) rotate(1.5deg); opacity: 1; filter: drop-shadow(0 2px 6px rgba(220,38,38,0.45)); }
         }
-        @keyframes nau-shimmer-pulse {
-          0%, 100% { opacity: 0.92; transform: translateY(0); }
-          50% { opacity: 1; transform: translateY(-1.5px); }
+        @keyframes nau-logo-breath {
+          0%, 100% { transform: translateY(0); opacity: 0.95; }
+          50% { transform: translateY(-1.5px); opacity: 1; }
         }
-        @keyframes nau-dots-bounce {
-          0%, 80%, 100% { transform: scale(0); opacity: 0.3; }
-          40% { transform: scale(1); opacity: 1; }
+        @keyframes nau-dot-blink {
+          0%, 80%, 100% { transform: scale(0.4); opacity: 0.3; }
+          40% { transform: scale(1.1); opacity: 1; }
         }
-        .nau-petal-1 {
-          transform-origin: 25px 65px;
-          animation: nau-petal-wave-1 1.8s ease-in-out infinite;
+        .nau-petal-anim-1 {
+          transform-origin: 20px 65px;
+          animation: nau-lotus-wave-1 2s ease-in-out infinite;
         }
-        .nau-petal-2 {
-          transform-origin: 30px 48px;
-          animation: nau-petal-wave-2 1.8s ease-in-out 0.25s infinite;
+        .nau-petal-anim-2 {
+          transform-origin: 25px 45px;
+          animation: nau-lotus-wave-2 2s ease-in-out 0.3s infinite;
         }
-        .nau-petal-3 {
-          transform-origin: 40px 30px;
-          animation: nau-petal-wave-3 1.8s ease-in-out 0.5s infinite;
+        .nau-petal-anim-3 {
+          transform-origin: 45px 25px;
+          animation: nau-lotus-wave-3 2s ease-in-out 0.6s infinite;
         }
-        .nau-text-brand {
-          animation: nau-shimmer-pulse 2s ease-in-out infinite;
+        .nau-text-anim {
+          animation: nau-logo-breath 2.4s ease-in-out infinite;
         }
-        .nau-dot-1 { animation: nau-dots-bounce 1.4s infinite ease-in-out both; }
-        .nau-dot-2 { animation: nau-dots-bounce 1.4s infinite ease-in-out 0.2s both; }
-        .nau-dot-3 { animation: nau-dots-bounce 1.4s infinite ease-in-out 0.4s both; }
+        .nau-dot-anim-1 { animation: nau-dot-blink 1.4s infinite ease-in-out both; }
+        .nau-dot-anim-2 { animation: nau-dot-blink 1.4s infinite ease-in-out 0.2s both; }
+        .nau-dot-anim-3 { animation: nau-dot-blink 1.4s infinite ease-in-out 0.4s both; }
       `}</style>
 
-      {/* SVG Vector Logo NAU Chuẩn */}
+      {/* SVG Vector Logo NAU Chuẩn Font Times New Roman Bold Italic */}
       <svg
         width={currentSize.width}
         height={currentSize.height}
-        viewBox="0 0 340 115"
+        viewBox="0 0 240 90"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
         className="overflow-visible"
       >
         <defs>
-          {/* Gradient Cánh Sen Đỏ NAU */}
-          <linearGradient id="nauRedGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#E11D48" />
+          <linearGradient id="nauLoadingPetalGrad" x1="0%" y1="100%" x2="80%" y2="0%">
+            <stop offset="0%" stopColor="#B91C1C" />
             <stop offset="50%" stopColor="#DC2626" />
-            <stop offset="100%" stopColor="#991B1B" />
+            <stop offset="100%" stopColor="#EF4444" />
           </linearGradient>
 
-          {/* Gradient Xanh Dương NAU */}
-          <linearGradient id="nauBlueGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+          <linearGradient id="nauLoadingBlueGrad" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor="#2563EB" />
-            <stop offset="50%" stopColor="#1D4ED8" />
-            <stop offset="100%" stopColor="#0B3C9B" />
+            <stop offset="60%" stopColor="#1D4ED8" />
+            <stop offset="100%" stopColor="#1E40AF" />
           </linearGradient>
 
-          {/* Bóng nổi cho các khối chữ */}
-          <filter id="nauEmboss" x="-10%" y="-10%" width="120%" height="120%">
-            <feDropShadow dx="1" dy="2" stdDeviation="1.5" floodColor="#000" floodOpacity="0.2" />
+          <linearGradient id="nauLoadingRedGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#EF4444" />
+            <stop offset="50%" stopColor="#DC2626" />
+            <stop offset="100%" stopColor="#B91C1C" />
+          </linearGradient>
+
+          <filter id="nauLoadingShadow" x="-10%" y="-10%" width="120%" height="120%">
+            <feDropShadow dx="1" dy="2" stdDeviation="1.5" floodColor="#000000" floodOpacity="0.2" />
           </filter>
         </defs>
 
-        {/* ========================================================
-            3 CÁNH SEN NGHỆ AN (TRÁI) - CHUYỂN ĐỘNG VƯƠN NỞ TUẦN TỰ
-            ======================================================== */}
-        <g id="nau-lotus-petals">
-          {/* Cánh Sen 1 (Dưới cùng: vươn lượn từ đáy sang phải) */}
+        {/* 3 Cánh Sen Nghệ An Chuyển Động Tuần Tự */}
+        <g id="lotus-petals-loading" filter="url(#nauLoadingShadow)">
+          {/* Cánh sen 1 (Dưới) */}
           <path
-            className="nau-petal-1"
-            d="M 12 78 C 22 72, 38 68, 56 74 C 42 82, 28 84, 12 78 Z"
-            fill="url(#nauRedGradient)"
-          />
-          <path
-            className="nau-petal-1"
-            d="M 14 77 C 28 65, 48 64, 66 70 C 48 76, 32 79, 14 77 Z"
-            fill="url(#nauRedGradient)"
-            opacity="0.9"
+            className="nau-petal-anim-1"
+            d="M 16 68 C 14 62, 18 52, 28 48 C 36 45, 48 48, 62 60 C 50 63, 38 65, 26 73 C 20 77, 16 74, 16 68 Z"
+            fill="url(#nauLoadingPetalGrad)"
           />
 
-          {/* Cánh Sen 2 (Ở giữa: to bản, uốn cánh hình ngọn lửa hoa sen) */}
+          {/* Cánh sen 2 (Giữa) */}
           <path
-            className="nau-petal-2"
-            d="M 22 62 C 24 45, 36 34, 52 28 C 50 44, 42 56, 28 66 C 24 64, 22 63, 22 62 Z"
-            fill="url(#nauRedGradient)"
-            filter="url(#nauEmboss)"
+            className="nau-petal-anim-2"
+            d="M 23 52 C 20 38, 28 26, 44 20 C 56 16, 68 22, 74 34 C 64 36, 52 42, 42 56 C 34 66, 26 62, 23 52 Z"
+            fill="url(#nauLoadingPetalGrad)"
+            opacity="0.96"
           />
 
-          {/* Cánh Sen 3 (Trên cùng: vút cao kiêu hãnh) */}
+          {/* Cánh sen 3 (Trên) */}
           <path
-            className="nau-petal-3"
-            d="M 46 24 C 54 8, 70 2, 80 4 C 74 18, 64 28, 52 32 C 48 29, 46 26, 46 24 Z"
-            fill="url(#nauRedGradient)"
-            filter="url(#nauEmboss)"
+            className="nau-petal-anim-3"
+            d="M 44 24 C 44 14, 52 6, 64 4 C 74 2, 82 8, 86 16 C 80 24, 70 32, 58 38 C 50 42, 46 34, 44 24 Z"
+            fill="url(#nauLoadingPetalGrad)"
           />
 
-          {/* Đường chân uốn lượn liên kết từ cánh sen sang chữ NAU */}
+          {/* Chân uốn lượn */}
           <path
-            d="M 35 77 Q 75 79 120 78"
-            stroke="url(#nauRedGradient)"
-            strokeWidth="3.5"
+            d="M 22 73 C 35 73, 55 74, 84 74"
+            stroke="url(#nauLoadingPetalGrad)"
+            strokeWidth="3"
             strokeLinecap="round"
           />
         </g>
 
-        {/* ========================================================
-            CHỮ "NAU" IN HOA NGHIÊNG CÁCH ĐIỆU (N xanh - A đỏ - U xanh)
-            ======================================================== */}
-        <g id="nau-letters" className="nau-text-brand" filter="url(#nauEmboss)">
-          {/* Chữ N (Xanh dương) */}
-          <path
-            d="M 88 74 L 110 18 L 126 18 L 138 52 L 148 18 L 164 18 L 142 74 L 126 74 L 114 40 L 104 74 Z"
-            fill="url(#nauBlueGradient)"
-          />
-
-          {/* Chữ A (Màu đỏ son) */}
-          <path
-            d="M 152 74 L 176 18 L 194 18 L 216 74 L 199 74 L 193 58 L 172 58 L 166 74 Z M 176 46 L 189 46 L 184 32 Z"
-            fill="url(#nauRedGradient)"
-          />
-
-          {/* Chữ U (Xanh dương) */}
-          <path
-            d="M 214 18 L 230 18 L 222 54 C 220 64, 226 74, 240 74 C 254 74, 262 64, 264 54 L 272 18 L 288 18 L 280 54 C 276 72, 260 86, 238 86 C 216 86, 204 72, 208 54 Z"
-            fill="url(#nauBlueGradient)"
-          />
+        {/* Chữ NAU Font Times New Roman Bold Italic */}
+        <g id="letters-nau-loading" className="nau-text-anim" filter="url(#nauLoadingShadow)">
+          <text
+            x="92"
+            y="66"
+            style={{
+              fontFamily: "'Times New Roman', Times, 'Playfair Display', serif",
+              fontStyle: 'italic',
+              fontWeight: 'bold',
+              fontSize: '56px',
+              letterSpacing: '-1px'
+            }}
+          >
+            <tspan fill="url(#nauLoadingBlueGrad)">N</tspan>
+            <tspan fill="url(#nauLoadingRedGrad)">A</tspan>
+            <tspan fill="url(#nauLoadingBlueGrad)">U</tspan>
+          </text>
         </g>
-
-        {/* ========================================================
-            DÒNG TÊN TRƯỜNG: TRƯỜNG ĐẠI HỌC NGHỆ AN - NGHE AN UNIVERSITY
-            ======================================================== */}
-        {showSubtitle && (
-          <g id="nau-subtitles">
-            {/* TRƯỜNG ĐẠI HỌC NGHỆ AN (Màu đỏ) */}
-            <text
-              x="130"
-              y="94"
-              fill="#DC2626"
-              fontSize="12"
-              fontWeight="800"
-              fontFamily="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
-              letterSpacing="0.8"
-            >
-              TRƯỜNG ĐẠI HỌC NGHỆ AN
-            </text>
-
-            {/* NGHE AN UNIVERSITY (Màu xanh dương) */}
-            <text
-              x="130"
-              y="107"
-              fill="#1D4ED8"
-              fontSize="9.5"
-              fontWeight="700"
-              fontFamily="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
-              letterSpacing="2"
-            >
-              NGHE AN UNIVERSITY
-            </text>
-          </g>
-        )}
       </svg>
 
-      {/* Thông điệp tải trang với 3 chấm nhịp nhàng */}
+      {/* Thông báo tải trang */}
       {text && (
-        <div className={`flex items-center gap-1.5 mt-3 text-slate-600 dark:text-slate-300 font-semibold tracking-wide ${currentSize.fontSize}`}>
+        <div className={`flex items-center gap-1.5 mt-2.5 text-slate-600 dark:text-slate-300 font-semibold tracking-wide ${currentSize.fontSize}`}>
           <span>{text}</span>
           <div className="flex items-center gap-1 ml-0.5">
-            <span className="w-1.5 h-1.5 rounded-full bg-nau-red nau-dot-1" />
-            <span className="w-1.5 h-1.5 rounded-full bg-nau-blue nau-dot-2" />
-            <span className="w-1.5 h-1.5 rounded-full bg-nau-red nau-dot-3" />
+            <span className="w-1.5 h-1.5 rounded-full bg-nau-red nau-dot-anim-1" />
+            <span className="w-1.5 h-1.5 rounded-full bg-nau-blue nau-dot-anim-2" />
+            <span className="w-1.5 h-1.5 rounded-full bg-nau-red nau-dot-anim-3" />
           </div>
         </div>
       )}

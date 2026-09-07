@@ -14,7 +14,8 @@ import {
   Star, 
   Eye, 
   Sparkles,
-  MessageSquare
+  MessageSquare,
+  Play
 } from 'lucide-react';
 
 export const ProductCard = ({ product }) => {
@@ -90,6 +91,12 @@ export const ProductCard = ({ product }) => {
             <span className="px-2 py-0.5 rounded-lg bg-nau-warning text-nau-text text-[10px] font-extrabold flex items-center gap-1 shadow-md">
               <Sparkles className="w-3 h-3 fill-slate-900" />
               Nổi bật
+            </span>
+          )}
+          {product.videoUrl && (
+            <span className="px-2 py-0.5 rounded-lg bg-nau-red text-white text-[10px] font-extrabold flex items-center gap-1 shadow-md">
+              <Play className="w-2.5 h-2.5 fill-current" />
+              Video
             </span>
           )}
           <span className="px-2 py-0.5 rounded-lg bg-slate-900/70 backdrop-blur-md text-white text-[10px] font-semibold">

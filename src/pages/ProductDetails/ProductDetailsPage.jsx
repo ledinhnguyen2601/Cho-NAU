@@ -202,7 +202,7 @@ export const ProductDetailsPage = () => {
         
         {/* Left Col: Image Gallery (7 cols) */}
         <div className="lg:col-span-7">
-          <ImageGallery images={product.images} title={product.title} />
+          <ImageGallery images={product.images} title={product.title} videoUrl={product.videoUrl} />
         </div>
 
         {/* Right Col: Details & Actions (5 cols) */}

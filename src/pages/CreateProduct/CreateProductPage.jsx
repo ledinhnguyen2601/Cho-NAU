@@ -4,7 +4,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { createProduct } from '../../services/productService';
-import { uploadProductImage } from '../../services/storageService';
+import { uploadProductImage, uploadProductVideo } from '../../services/storageService';
 import { validateProductForm } from '../../utils/validators';
 import { INITIAL_CATEGORIES } from '../../config/constants';
 import { Button } from '../../components/common/Button';
@@ -17,7 +17,12 @@ import {
   ShieldAlert, 
   Sparkles, 
   ArrowLeft,
-  Image as ImageIcon
+  Image as ImageIcon,
+  Video,
+  Film,
+  Play,
+  CheckCircle2,
+  AlertCircle
 } from 'lucide-react';
 
 export const CreateProductPage = () => {
@@ -32,7 +37,9 @@ export const CreateProductPage = () => {
     condition: 'Đã sử dụng - Rất tốt (90%)',
     location: 'Cơ sở 1 NAU (P. Hưng Dũng, TP. Vinh)',
     description: '',
-    images: []
+    images: [],
+    videoUrl: null,
+    videoMeta: null
   });
 
   // Clear individual field error when user edits that field
@@ -46,6 +53,12 @@ export const CreateProductPage = () => {
   const [formErrors, setFormErrors] = useState({});
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
+
+  // Video upload state
+  const [isVideoUploading, setIsVideoUploading] = useState(false);
+  const [videoUploadProgress, setVideoUploadProgress] = useState(0);
+  const [videoError, setVideoError] = useState(null);
+
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // If not logged in
@@ -131,6 +144,42 @@ export const CreateProductPage = () => {
     }));
   };
 
+  const handleVideoUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsVideoUploading(true);
+    setVideoError(null);
+    try {
+      const { url, meta } = await uploadProductVideo(file, (progress) => setVideoUploadProgress(progress));
+      setForm(prev => ({
+        ...prev,
+        videoUrl: url,
+        videoMeta: meta
+      }));
+      toast.success(`Đã tải lên video thực tế (${meta.formattedDuration})!`);
+    } catch (err) {
+      console.error('Video upload error:', err);
+      const msg = err.message || 'Lỗi tải video. Vui lòng kiểm tra thời lượng (< 3 phút) và định dạng.';
+      setVideoError(msg);
+      toast.error(msg);
+    } finally {
+      setIsVideoUploading(false);
+      setVideoUploadProgress(0);
+      e.target.value = '';
+    }
+  };
+
+  const handleRemoveVideo = () => {
+    setForm(prev => ({
+      ...prev,
+      videoUrl: null,
+      videoMeta: null
+    }));
+    setVideoError(null);
+    toast.info('Đã gỡ video sản phẩm.');
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     const validation = validateProductForm(form);
@@ -148,7 +197,8 @@ export const CreateProductPage = () => {
       const newProd = await createProduct({
         ...form,
         price: Number(form.price),
-        categoryName: selectedCategory?.name || 'Đồ cũ sinh viên'
+        categoryName: selectedCategory?.name || 'Đồ cũ sinh viên',
+        videoUrl: form.videoUrl || null
       }, currentUser);
 
       toast.success('Đăng tin bán sản phẩm thành công!');
@@ -269,6 +319,109 @@ export const CreateProductPage = () => {
 
             {formErrors.images && (
               <p className="text-xs text-nau-danger font-semibold">{formErrors.images}</p>
+            )}
+          </div>
+
+          {/* Video thực tế sản phẩm (Tùy chọn - Giúp tăng độ tin cậy) */}
+          <div className="space-y-3 p-4 sm:p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700/60">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-xl bg-nau-red/10 text-nau-red flex items-center justify-center">
+                  <Film className="w-4 h-4" />
+                </div>
+                <div>
+                  <label className="block text-xs font-black text-nau-text dark:text-nau-text uppercase tracking-wider">
+                    Video thực tế sản phẩm <span className="text-slate-400 font-normal lowercase">(Tùy chọn)</span>
+                  </label>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                    Tối đa 3 phút • Tối đa 1080p Full HD • Giúp người mua tin tưởng hơn 80%
+                  </p>
+                </div>
+              </div>
+              {form.videoUrl && (
+                <span className="flex items-center gap-1 text-xs font-bold text-nau-success bg-nau-success/10 px-2.5 py-1 rounded-full">
+                  <CheckCircle2 className="w-3.5 h-3.5" />
+                  Đã có video
+                </span>
+              )}
+            </div>
+
+            {/* Video Preview If Uploaded */}
+            {form.videoUrl ? (
+              <div className="space-y-2">
+                <div className="relative rounded-2xl overflow-hidden bg-black max-h-[280px] flex items-center justify-center border border-slate-700">
+                  <video
+                    src={form.videoUrl}
+                    controls
+                    className="max-h-[280px] w-auto max-w-full rounded-2xl"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleRemoveVideo}
+                    className="absolute top-2 right-2 p-1.5 rounded-full bg-slate-900/80 text-white hover:bg-nau-red transition-colors shadow-md cursor-pointer"
+                    title="Xóa video"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                  {form.videoMeta && (
+                    <span className="absolute bottom-2 left-2 bg-slate-900/80 backdrop-blur-md text-white text-[11px] font-bold px-2 py-0.5 rounded-lg border border-white/10">
+                      Thời lượng: {form.videoMeta.formattedDuration}
+                    </span>
+                  )}
+                </div>
+                <div className="flex justify-end">
+                  <button
+                    type="button"
+                    onClick={handleRemoveVideo}
+                    className="text-xs font-bold text-nau-red hover:underline inline-flex items-center gap-1 cursor-pointer"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                    Gỡ bỏ video này để tải video khác
+                  </button>
+                </div>
+              </div>
+            ) : (
+              /* Video Upload Trigger */
+              <label className="block border-2 border-dashed border-slate-300 dark:border-slate-700 hover:border-nau-red/60 dark:hover:border-nau-red/60 rounded-2xl p-5 text-center cursor-pointer transition-all bg-white dark:bg-slate-900/60 hover:bg-red-50/20 group">
+                <div className="w-11 h-11 rounded-2xl bg-red-100 dark:bg-red-950/40 text-nau-red flex items-center justify-center mx-auto shadow-sm group-hover:scale-105 transition-transform">
+                  <Video className="w-5 h-5" />
+                </div>
+                <p className="text-xs font-bold text-slate-700 dark:text-slate-200 mt-2">
+                  Tải lên video quay cận cảnh sản phẩm
+                </p>
+                <p className="text-[11px] text-slate-400 mt-0.5">
+                  Định dạng MP4, WebM, MOV (Tối đa 3 phút, dưới 100MB)
+                </p>
+                <input
+                  type="file"
+                  accept="video/mp4,video/webm,video/quicktime,video/ogg"
+                  onChange={handleVideoUpload}
+                  className="hidden"
+                  disabled={isVideoUploading}
+                />
+              </label>
+            )}
+
+            {/* Video Progress Bar */}
+            {isVideoUploading && (
+              <div className="space-y-1 pt-1">
+                <div className="w-full bg-slate-200 dark:bg-slate-700 h-2 rounded-full overflow-hidden">
+                  <div
+                    style={{ width: `${videoUploadProgress}%` }}
+                    className="bg-nau-red h-full transition-all duration-300"
+                  />
+                </div>
+                <p className="text-[11px] text-nau-red font-bold text-center">
+                  Đang kiểm tra và tải video lên ({videoUploadProgress}%)...
+                </p>
+              </div>
+            )}
+
+            {videoError && (
+              <div className="flex items-center gap-1.5 text-xs text-nau-red font-semibold bg-red-50 dark:bg-red-950/20 p-2.5 rounded-xl border border-red-200 dark:border-red-800/40">
+                <AlertCircle className="w-4 h-4 shrink-0" />
+                <span>{videoError}</span>
+              </div>
             )}
           </div>
 

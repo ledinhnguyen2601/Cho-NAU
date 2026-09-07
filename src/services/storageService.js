@@ -194,3 +194,100 @@ export const uploadVerificationDocument = async (file, onProgress) => {
   if (onProgress) onProgress(100);
   return compressed;
 };
+
+/**
+ * Validate video file:
+ * - Max duration: 180 seconds (3 minutes)
+ * - Max resolution: Full HD 1080p (width & height <= 1920)
+ * - Max size: 100MB
+ * - Formats: mp4, webm, quicktime, ogg
+ */
+export const validateVideoFile = (file) => {
+  return new Promise((resolve, reject) => {
+    if (!file) {
+      return reject(new Error('Vui lòng chọn video.'));
+    }
+
+    const validTypes = ['video/mp4', 'video/webm', 'video/quicktime', 'video/x-m4v', 'video/ogg'];
+    if (!validTypes.includes(file.type) && !file.name.match(/\.(mp4|webm|mov|m4v|ogg)$/i)) {
+      return reject(new Error('Định dạng video không hỗ trợ. Vui lòng chọn MP4, WebM hoặc MOV.'));
+    }
+
+    const maxSize = 100 * 1024 * 1024; // 100MB
+    if (file.size > maxSize) {
+      return reject(new Error('Dung lượng video vượt quá 100MB. Vui lòng nén video trước khi tải lên.'));
+    }
+
+    // Load video element to inspect duration and resolution
+    const video = document.createElement('video');
+    video.preload = 'metadata';
+    const objectUrl = URL.createObjectURL(file);
+
+    video.onloadedmetadata = () => {
+      URL.revokeObjectURL(objectUrl);
+      const duration = video.duration;
+      const width = video.videoWidth;
+      const height = video.videoHeight;
+
+      if (duration > 180) { // > 3 minutes
+        const mins = Math.floor(duration / 60);
+        const secs = Math.floor(duration % 60);
+        return reject(new Error(`Thời lượng video tối đa là 3 phút (Video của bạn: ${mins} phút ${secs} giây).`));
+      }
+
+      if (width > 1920 || height > 1920) {
+        return reject(new Error(`Độ phân giải video vượt quá Full HD 1080p (${width}x${height}). Vui lòng xuất video ở 1080p hoặc 720p.`));
+      }
+
+      resolve({
+        isValid: true,
+        duration,
+        width,
+        height,
+        formattedDuration: `${Math.floor(duration / 60)}:${String(Math.floor(duration % 60)).padStart(2, '0')}`
+      });
+    };
+
+    video.onerror = () => {
+      URL.revokeObjectURL(objectUrl);
+      reject(new Error('Không thể đọc dữ liệu video. File có thể bị hỏng hoặc định dạng không tương thích.'));
+    };
+
+    video.src = objectUrl;
+  });
+};
+
+/**
+ * Upload product video:
+ * 1. Checks constraints via validateVideoFile.
+ * 2. Uploads to Firebase Storage if available.
+ * 3. Falls back to blob / object URL for smooth local experience.
+ */
+export const uploadProductVideo = async (file, onProgress) => {
+  const meta = await validateVideoFile(file);
+
+  // 1. Try Firebase Storage
+  if (isFirebaseConfigured && storage) {
+    try {
+      const fileExt = file.name ? file.name.split('.').pop() : 'mp4';
+      const fileName = `product_videos/${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
+      const storageRef = ref(storage, fileName);
+
+      if (onProgress) onProgress(30);
+      const snapshot = await withTimeout(uploadBytes(storageRef, file), 30000);
+      if (onProgress) onProgress(80);
+      const downloadURL = await withTimeout(getDownloadURL(snapshot.ref), 10000);
+      if (onProgress) onProgress(100);
+      return { url: downloadURL, meta };
+    } catch (error) {
+      console.warn('Firebase Storage video upload error, falling back to local object URL:', error);
+    }
+  }
+
+  // 2. Local fallback if storage is unconfigured / offline
+  if (onProgress) onProgress(50);
+  const localUrl = URL.createObjectURL(file);
+  if (onProgress) onProgress(100);
+  return { url: localUrl, meta };
+};
+
