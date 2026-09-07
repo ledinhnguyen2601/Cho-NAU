@@ -1,5 +1,5 @@
 // File: src/components/common/ImageLightbox.jsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { X, ChevronLeft, ChevronRight, ZoomIn } from 'lucide-react';
 
 /**
@@ -20,6 +20,7 @@ export const ImageLightbox = ({
 }) => {
   const [internalIndex, setInternalIndex] = useState(initialIndex || 0);
 
+  // Synchronize initial or external index when modal opens
   useEffect(() => {
     if (isOpen) {
       setInternalIndex(currentIndex !== undefined ? currentIndex : (initialIndex || 0));
@@ -28,37 +29,55 @@ export const ImageLightbox = ({
 
   const activeIndex = currentIndex !== undefined ? currentIndex : internalIndex;
 
-  if (!isOpen || images.length === 0) return null;
-
-  const currentImage = images[activeIndex] || images[0];
-
-  const handleIndexChange = (newIdx) => {
+  const handleIndexChange = useCallback((newIdx) => {
     setInternalIndex(newIdx);
     if (onIndexChange) onIndexChange(newIdx);
-  };
+  }, [onIndexChange]);
 
-  const handlePrev = (e) => {
+  const handlePrev = useCallback((e) => {
     e?.stopPropagation();
+    if (images.length === 0) return;
     const prevIdx = activeIndex === 0 ? images.length - 1 : activeIndex - 1;
     handleIndexChange(prevIdx);
-  };
+  }, [activeIndex, images.length, handleIndexChange]);
 
-  const handleNext = (e) => {
+  const handleNext = useCallback((e) => {
     e?.stopPropagation();
+    if (images.length === 0) return;
     const nextIdx = activeIndex === images.length - 1 ? 0 : activeIndex + 1;
     handleIndexChange(nextIdx);
-  };
+  }, [activeIndex, images.length, handleIndexChange]);
 
-  // Keyboard controls
+  // Keyboard controls hook - MUST BE DECLARED BEFORE EARLY RETURNS
   useEffect(() => {
+    if (!isOpen || images.length === 0) return;
+
     const handleKeyDown = (e) => {
       if (e.key === 'Escape') onClose();
       if (e.key === 'ArrowLeft') handlePrev();
       if (e.key === 'ArrowRight') handleNext();
     };
+
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [activeIndex, images.length]);
+  }, [isOpen, activeIndex, images.length, onClose, handlePrev, handleNext]);
+
+  // Lock body scroll when lightbox is open
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isOpen]);
+
+  // Early return ONLY AFTER all hooks are called
+  if (!isOpen || images.length === 0) return null;
+
+  const currentImage = images[activeIndex] || images[0];
 
   // Touch swipe support for mobile
   let touchStartX = 0;

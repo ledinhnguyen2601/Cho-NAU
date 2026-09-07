@@ -24,7 +24,7 @@ export const NauBrandLogo = ({
       <img
         src="/nau_logo_photo.png"
         alt="Logo Đại học Nghệ An (NAU)"
-        className={`${heightClass} w-auto object-contain rounded-lg ${showShadow ? 'drop-shadow-md' : 'shadow-xs'} border border-slate-100 dark:border-slate-800/80`}
+        className={`${heightClass} w-auto object-contain ${showShadow ? 'drop-shadow-md' : ''}`}
         loading="eager"
       />
     </div>

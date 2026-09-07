@@ -32,12 +32,12 @@ export const NauLoadingLogo = ({
         .nau-dot-3 { animation: nau-dot-bounce 1.4s infinite ease-in-out 0.4s both; }
       `}</style>
 
-      {/* Hình tĩnh logo chuẩn từ ảnh gốc thực tế (không làm méo cánh sen) */}
+      {/* Hình tĩnh logo chuẩn xóa nền từ ảnh gốc thực tế */}
       <div className={`${currentSize.imgWidth} flex items-center justify-center`}>
         <img
           src="/nau_logo_photo.png"
           alt="Logo Đại học Nghệ An (NAU)"
-          className="w-full h-auto object-contain rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800"
+          className="w-full h-auto object-contain drop-shadow-sm"
           loading="eager"
         />
       </div>
