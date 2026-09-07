@@ -7,6 +7,7 @@ import { Modal } from '../common/Modal';
 import { Button } from '../common/Button';
 import { db, doc, onSnapshot } from '../../config/firebase';
 import { NauLoadingLogo } from '../brand/NauLoadingLogo';
+import { formatCurrency } from '../../utils/formatters';
 import { 
   ShieldCheck, 
   ExternalLink, 

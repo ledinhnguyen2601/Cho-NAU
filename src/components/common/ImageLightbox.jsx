@@ -1,5 +1,5 @@
 // File: src/components/common/ImageLightbox.jsx
-import React, { useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X, ChevronLeft, ChevronRight, ZoomIn } from 'lucide-react';
 
 /**
@@ -13,22 +13,40 @@ export const ImageLightbox = ({
   isOpen,
   onClose,
   images = [],
-  currentIndex = 0,
+  currentIndex,
+  initialIndex = 0,
   onIndexChange,
   title = 'Hình ảnh sản phẩm'
 }) => {
+  const [internalIndex, setInternalIndex] = useState(initialIndex || 0);
+
+  useEffect(() => {
+    if (isOpen) {
+      setInternalIndex(currentIndex !== undefined ? currentIndex : (initialIndex || 0));
+    }
+  }, [isOpen, currentIndex, initialIndex]);
+
+  const activeIndex = currentIndex !== undefined ? currentIndex : internalIndex;
+
   if (!isOpen || images.length === 0) return null;
 
-  const currentImage = images[currentIndex] || images[0];
+  const currentImage = images[activeIndex] || images[0];
+
+  const handleIndexChange = (newIdx) => {
+    setInternalIndex(newIdx);
+    if (onIndexChange) onIndexChange(newIdx);
+  };
 
   const handlePrev = (e) => {
     e?.stopPropagation();
-    onIndexChange(currentIndex === 0 ? images.length - 1 : currentIndex - 1);
+    const prevIdx = activeIndex === 0 ? images.length - 1 : activeIndex - 1;
+    handleIndexChange(prevIdx);
   };
 
   const handleNext = (e) => {
     e?.stopPropagation();
-    onIndexChange(currentIndex === images.length - 1 ? 0 : currentIndex + 1);
+    const nextIdx = activeIndex === images.length - 1 ? 0 : activeIndex + 1;
+    handleIndexChange(nextIdx);
   };
 
   // Keyboard controls
@@ -40,7 +58,7 @@ export const ImageLightbox = ({
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [currentIndex, images.length]);
+  }, [activeIndex, images.length]);
 
   // Touch swipe support for mobile
   let touchStartX = 0;
@@ -66,7 +84,7 @@ export const ImageLightbox = ({
       >
         <div className="text-white text-xs font-semibold truncate max-w-[70vw]">
           <span>{title}</span>
-          <span className="ml-2 text-white/60">({currentIndex + 1}/{images.length})</span>
+          <span className="ml-2 text-white/60">({activeIndex + 1}/{images.length})</span>
         </div>
 
         <button
@@ -102,7 +120,7 @@ export const ImageLightbox = ({
         <div className="relative max-w-full max-h-full flex items-center justify-center">
           <img
             src={currentImage}
-            alt={`${title} - ảnh ${currentIndex + 1}`}
+            alt={`${title} - ảnh ${activeIndex + 1}`}
             className="max-h-[72vh] sm:max-h-[78vh] max-w-[94vw] object-contain rounded-lg shadow-2xl transition-all duration-200"
           />
         </div>
@@ -130,9 +148,9 @@ export const ImageLightbox = ({
             <button
               key={idx}
               type="button"
-              onClick={() => onIndexChange(idx)}
+              onClick={() => handleIndexChange(idx)}
               className={`relative w-14 h-14 sm:w-16 sm:h-16 rounded-lg overflow-hidden border-2 transition-all shrink-0 cursor-pointer ${
-                currentIndex === idx
+                activeIndex === idx
                   ? 'border-nau-primary ring-2 ring-nau-primary scale-105'
                   : 'border-white/20 opacity-50 hover:opacity-100'
               }`}
