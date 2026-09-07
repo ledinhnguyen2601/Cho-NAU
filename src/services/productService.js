@@ -63,6 +63,11 @@ export const getProducts = async (filters = {}) => {
 const applyClientFilters = (products, filters) => {
   let list = [...products];
 
+  // Always exclude hidden products from public marketplace
+  if (filters.status !== 'hidden') {
+    list = list.filter(p => p.status !== 'hidden');
+  }
+
   // Search filter
   if (filters.search && filters.search.trim()) {
     const q = filters.search.toLowerCase().trim();
@@ -270,3 +275,19 @@ export const getUserProducts = async (userId) => {
     return [];
   }
 };
+
+/**
+ * Toggle hide / show product (for user when product is sold or temporarily hidden)
+ */
+export const toggleHideProduct = async (id, isHidden) => {
+  const newStatus = isHidden ? 'hidden' : 'active';
+  return updateProduct(id, { status: newStatus });
+};
+
+/**
+ * Mark product as sold
+ */
+export const markProductAsSold = async (id) => {
+  return updateProduct(id, { status: 'sold' });
+};
+

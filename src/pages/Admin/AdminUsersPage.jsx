@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { getAllUsers, updateUserStatus, toggleUserRole } from '../../services/adminService';
+import { getAllUsers, updateUserStatus, toggleUserRole, sendUserWarning, banAndDeleteUser } from '../../services/adminService';
 import { approveVerification, rejectVerification } from '../../services/verificationService';
 import { UserModerationTable } from '../../components/admin/UserModerationTable';
 import { useToast } from '../../context/ToastContext';
@@ -69,6 +69,26 @@ export const AdminUsersPage = () => {
     }
   };
 
+  const handleSendWarning = async (userId, reason, message) => {
+    try {
+      await sendUserWarning(userId, reason, message);
+      toast.success('Đã gửi cảnh báo chính thức cho người dùng thành công.');
+      loadUsers();
+    } catch (e) {
+      toast.error('Lỗi khi gửi cảnh báo: ' + (e.message || ''));
+    }
+  };
+
+  const handleBanUser = async (userId, banReason) => {
+    try {
+      await banAndDeleteUser(userId, banReason);
+      toast.success('Đã BAN VĨNH VIỄN và XÓA HẲN tài khoản khỏi database thành công!');
+      loadUsers();
+    } catch (e) {
+      toast.error('Lỗi khi ban tài khoản: ' + (e.message || ''));
+    }
+  };
+
   const filteredUsers = users.filter(u => {
     const q = searchTerm.toLowerCase().trim();
     const matchSearch = !q || (
@@ -129,6 +149,8 @@ export const AdminUsersPage = () => {
         onToggleRole={handleToggleRole}
         onApproveVerification={handleApproveVerification}
         onRejectVerification={handleRejectVerification}
+        onSendWarning={handleSendWarning}
+        onBanUser={handleBanUser}
       />
     </div>
   );

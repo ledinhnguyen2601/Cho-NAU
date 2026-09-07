@@ -31,6 +31,7 @@ export const ChatPage = () => {
   const [conversations, setConversations] = useState([]);
   const [activeConversation, setActiveConversation] = useState(null);
   const [searchFilter, setSearchFilter] = useState('');
+  const [filterTag, setFilterTag] = useState('all'); // 'all' | 'unread' | 'trading'
   const [isLoading, setIsLoading] = useState(true);
 
   const loadConversations = async () => {
@@ -157,13 +158,23 @@ export const ChatPage = () => {
   }
 
   const filteredConversations = conversations.filter(c => {
+    // 1. Text filter
     const q = searchFilter.toLowerCase().trim();
-    if (!q) return true;
-    return (
+    const matchText = !q || (
       (c.productTitle && c.productTitle.toLowerCase().includes(q)) ||
       (c.buyerName && c.buyerName.toLowerCase().includes(q)) ||
       (c.sellerName && c.sellerName.toLowerCase().includes(q))
     );
+
+    // 2. Chip filter
+    let matchChip = true;
+    if (filterTag === 'unread') {
+      matchChip = c.lastSenderId && c.lastSenderId !== currentUser.id && (c.unreadCount || 0) > 0;
+    } else if (filterTag === 'trading') {
+      matchChip = c.productTitle !== undefined;
+    }
+
+    return matchText && matchChip;
   });
 
   return (
@@ -175,12 +186,12 @@ export const ChatPage = () => {
           activeConversation ? 'hidden md:flex' : 'flex'
         }`}
       >
-        {/* Search & Actions Header */}
+        {/* Search & Actions Header (Phong cách Chợ Tốt) */}
         <div className="p-3.5 border-b border-slate-100 dark:border-nau-border space-y-2.5">
           <div className="flex items-center justify-between">
             <h2 className="text-sm font-bold text-nau-text dark:text-nau-text flex items-center gap-2">
               <MessageSquare className="w-4 h-4 text-nau-primary" />
-              <span>Tin Nhắn Giao Dịch</span>
+              <span>Chat & Liên Hệ</span>
             </h2>
             
             {/* Mark all as read button */}
@@ -196,15 +207,53 @@ export const ChatPage = () => {
             )}
           </div>
 
+          {/* Search bar phong cách Chợ Tốt */}
           <div className="relative">
             <input
               type="text"
-              placeholder="Tìm theo tên bạn bè hoặc sản phẩm..."
+              placeholder="Nhập 3 ký tự để tìm kiếm..."
               value={searchFilter}
               onChange={(e) => setSearchFilter(e.target.value)}
-              className="w-full pl-8 pr-3 py-1.5 text-xs rounded-xl border border-nau-border dark:border-nau-border bg-nau-background dark:bg-nau-background text-nau-text dark:text-nau-text placeholder-slate-400"
+              className="w-full pl-8 pr-3 py-1.5 text-xs rounded-xl border border-nau-border dark:border-nau-border bg-nau-background dark:bg-nau-background text-nau-text dark:text-nau-text placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-nau-red"
             />
             <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
+          </div>
+
+          {/* Quick Filter Chips (Chợ Tốt Style) */}
+          <div className="flex gap-1.5 overflow-x-auto no-scrollbar pt-0.5">
+            <button
+              type="button"
+              onClick={() => setFilterTag('all')}
+              className={`px-3 py-1 rounded-full text-[11px] font-bold transition-colors whitespace-nowrap cursor-pointer ${
+                filterTag === 'all'
+                  ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-xs'
+                  : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300 hover:bg-slate-200'
+              }`}
+            >
+              Tất cả
+            </button>
+            <button
+              type="button"
+              onClick={() => setFilterTag('unread')}
+              className={`px-3 py-1 rounded-full text-[11px] font-bold transition-colors whitespace-nowrap cursor-pointer ${
+                filterTag === 'unread'
+                  ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-xs'
+                  : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300 hover:bg-slate-200'
+              }`}
+            >
+              Chưa đọc
+            </button>
+            <button
+              type="button"
+              onClick={() => setFilterTag('trading')}
+              className={`px-3 py-1 rounded-full text-[11px] font-bold transition-colors whitespace-nowrap cursor-pointer ${
+                filterTag === 'trading'
+                  ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-xs'
+                  : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300 hover:bg-slate-200'
+              }`}
+            >
+              Đang trao đổi
+            </button>
           </div>
         </div>
 

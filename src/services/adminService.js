@@ -1,4 +1,4 @@
-import { db, collection, getDocs, doc, getDoc, setDoc, updateDoc, query, where, getCountFromServer } from '../config/firebase';
+import { db, collection, getDocs, doc, getDoc, setDoc, updateDoc, deleteDoc, serverTimestamp, query, where, getCountFromServer } from '../config/firebase';
 import { parseDate } from '../utils/formatters';
 
 /**
@@ -148,9 +148,173 @@ export const getAllUsers = async () => {
       status: userOverride.status || u.status || 'active',
       studentId: isSuperAdmin ? (u.studentId || 'ADMIN-NAU') : (u.studentId || ''),
       faculty: isSuperAdmin ? (u.faculty || 'Đại học Nghệ An') : (u.faculty || 'Đại học Nghệ An'),
+      warningCount: userOverride.warningCount !== undefined ? userOverride.warningCount : (u.warningCount || 0),
+      warnings: userOverride.warnings || u.warnings || [],
       isOnline: u.isOnline === true || (u.lastActive && (Date.now() - (parseDate(u.lastActive)?.getTime() || 0)) < 5 * 60 * 1000)
     };
   });
+};
+
+/**
+ * Send an official warning to a user
+ */
+export const sendUserWarning = async (userId, reason, message, adminEmail = 'admin@nau.edu.vn') => {
+  const overrides = getUserOverrides();
+  const current = overrides[userId] || {};
+  const currentCount = current.warningCount !== undefined ? current.warningCount : 0;
+  const currentWarnings = current.warnings || [];
+
+  const newWarning = {
+    id: 'warn_' + Date.now(),
+    reason: reason || 'Vi phạm quy chế giao dịch',
+    message: message || '',
+    adminEmail,
+    createdAt: new Date().toISOString()
+  };
+
+  const updatedWarnings = [newWarning, ...currentWarnings];
+  const newCount = currentCount + 1;
+
+  saveUserOverride(userId, {
+    warningCount: newCount,
+    warnings: updatedWarnings
+  });
+
+  if (db) {
+    try {
+      const userRef = doc(db, 'users', userId);
+      const userSnap = await getDoc(userRef);
+      if (userSnap.exists()) {
+        const data = userSnap.data();
+        const firestoreCount = (data.warningCount || 0) + 1;
+        const firestoreWarnings = [newWarning, ...(data.warnings || [])];
+        await setDoc(userRef, {
+          warningCount: firestoreCount,
+          warnings: firestoreWarnings
+        }, { merge: true });
+      }
+    } catch (e) {
+      console.warn("Firestore sendUserWarning sync warning:", e);
+    }
+  }
+
+  return { id: userId, warningCount: newCount, warning: newWarning };
+};
+
+/**
+ * Permanently BAN user and Hard Delete from Database (Unlocked from 2nd violation)
+ */
+export const banAndDeleteUser = async (userId, banReason, adminEmail = 'admin@nau.edu.vn') => {
+  if (!banReason || !banReason.trim()) {
+    throw new Error("Admin cần nhập lý do ban cụ thể!");
+  }
+
+  let userInfo = { id: userId };
+
+  // 1. Get user details before deleting
+  if (db) {
+    try {
+      const userRef = doc(db, 'users', userId);
+      const userSnap = await getDoc(userRef);
+      if (userSnap.exists()) {
+        userInfo = { ...userInfo, ...userSnap.data() };
+      }
+    } catch (e) {
+      console.warn("Could not get user info prior to ban:", e);
+    }
+  }
+
+  const bannedRecord = {
+    uid: userId,
+    email: (userInfo.email || '').toLowerCase(),
+    name: userInfo.name || 'Người dùng',
+    studentId: userInfo.studentId || '',
+    banReason: banReason.trim(),
+    bannedAt: new Date().toISOString(),
+    bannedBy: adminEmail
+  };
+
+  // 2. Record to localStorage banned list
+  try {
+    const rawBanned = localStorage.getItem('nau_banned_users') || '[]';
+    const list = JSON.parse(rawBanned);
+    list.push(bannedRecord);
+    localStorage.setItem('nau_banned_users', JSON.stringify(list));
+  } catch (e) {}
+
+  // 3. Record to Firestore banned_users collection
+  if (db) {
+    try {
+      const bannedDocRef = doc(db, 'banned_users', userId);
+      await setDoc(bannedDocRef, bannedRecord);
+    } catch (e) {
+      console.warn("Firestore save banned_users warning:", e);
+    }
+  }
+
+  // 4. Clean up user's products from marketplace
+  if (db) {
+    try {
+      const q = query(collection(db, 'products'), where('sellerId', '==', userId));
+      const snap = await getDocs(q);
+      for (const pDoc of snap.docs) {
+        await updateDoc(doc(db, 'products', pDoc.id), {
+          status: 'hidden',
+          isBanned: true
+        });
+      }
+    } catch (e) {
+      console.warn("Firestore clean banned user products warning:", e);
+    }
+  }
+
+  // 5. HARD DELETE the user from users collection
+  if (db) {
+    try {
+      await deleteDoc(doc(db, 'users', userId));
+    } catch (e) {
+      console.warn("Firestore delete user record warning:", e);
+    }
+  }
+
+  // 6. Remove local user override
+  try {
+    const raw = localStorage.getItem('nau_user_overrides');
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      delete parsed[userId];
+      localStorage.setItem('nau_user_overrides', JSON.stringify(parsed));
+    }
+  } catch (e) {}
+
+  return bannedRecord;
+};
+
+/**
+ * Get all banned users list
+ */
+export const getBannedUsers = async () => {
+  let list = [];
+  try {
+    const raw = localStorage.getItem('nau_banned_users');
+    if (raw) list = JSON.parse(raw);
+  } catch (e) {}
+
+  if (db) {
+    try {
+      const snap = await getDocs(collection(db, 'banned_users'));
+      const dbList = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      const map = new Map();
+      [...list, ...dbList].forEach(item => {
+        if (item.uid) map.set(item.uid, item);
+      });
+      return Array.from(map.values());
+    } catch (e) {
+      console.warn("Firestore getBannedUsers warning:", e);
+    }
+  }
+
+  return list;
 };
 
 /**

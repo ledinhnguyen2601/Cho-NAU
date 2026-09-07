@@ -13,6 +13,8 @@ import {
   doc, 
   getDoc, 
   setDoc,
+  deleteDoc,
+  onSnapshot,
   isFirebaseConfigured
 } from '../config/firebase';
 
@@ -26,6 +28,7 @@ const AuthContext = createContext();
 export const AuthProvider = ({ children }) => {
   const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [bannedNotice, setBannedNotice] = useState(null);
   const heartbeatTimerRef = useRef(null);
 
   // Helper to update user's online presence in Firestore
@@ -72,6 +75,18 @@ export const AuthProvider = ({ children }) => {
         try {
           const userEmail = (fbUser.email || '').toLowerCase();
           const isDefaultAdmin = ADMIN_EMAILS.includes(userEmail);
+
+          // Check if user has been permanently banned
+          const bannedDocRef = doc(db, 'banned_users', fbUser.uid);
+          const bannedSnap = await getDoc(bannedDocRef);
+          if (bannedSnap.exists()) {
+            const bannedData = bannedSnap.data();
+            setBannedNotice(bannedData);
+            await fbSignOut(auth);
+            setCurrentUser(null);
+            setLoading(false);
+            return;
+          }
 
           // Fetch user profile from Firestore
           const userDocRef = doc(db, 'users', fbUser.uid);
@@ -269,6 +284,8 @@ export const AuthProvider = ({ children }) => {
     isPending,
     isAdmin,
     isSuspended,
+    bannedNotice,
+    clearBannedNotice: () => setBannedNotice(null),
     signInWithGoogle,
     signInWithGoogleRedirect,
     signInWithFacebook,

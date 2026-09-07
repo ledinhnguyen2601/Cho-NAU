@@ -22,7 +22,13 @@ import {
   Star, 
   Edit3, 
   ShieldCheck,
-  Building2
+  Building2,
+  Tag,
+  Bookmark,
+  ChevronRight,
+  Copy,
+  LogOut,
+  Coins
 } from 'lucide-react';
 
 export const ProfilePage = () => {
@@ -86,7 +92,7 @@ export const ProfilePage = () => {
 
   const badgeInfo = getVerificationBadgeInfo(profileUser.verificationStatus);
   const activeProducts = products.filter(p => p.status === 'active');
-  const soldProducts = products.filter(p => p.status === 'sold');
+  const soldProducts = products.filter(p => p.status === 'sold' || p.status === 'hidden');
 
   const handleSaveProfile = (e) => {
     e.preventDefault();
@@ -153,7 +159,14 @@ export const ProfilePage = () => {
 
           {/* Action on Header */}
           {isViewingSelf && (
-            <div className="shrink-0 flex gap-2">
+            <div className="shrink-0 flex flex-wrap gap-2">
+              <Link
+                to="/manage-listings"
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-amber-400 hover:bg-amber-500 text-slate-950 text-xs font-black shadow-xs transition-all"
+              >
+                <Tag className="w-3.5 h-3.5" />
+                <span>Quản lý tin đăng</span>
+              </Link>
               <Button
                 variant={activeTab === 'edit' ? 'primary' : 'outline'}
                 size="sm"
@@ -166,7 +179,119 @@ export const ProfilePage = () => {
           )}
         </div>
 
+        {/* Chợ Tốt Style Account Identification Card (Khi xem trang cá nhân của mình) */}
+        {isViewingSelf && (
+          <div className="mt-6 pt-5 border-t border-nau-border/80 dark:border-nau-border/80 grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+            {/* Account ID card */}
+            <div className="bg-slate-50 dark:bg-slate-900/60 p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 flex items-center justify-between">
+              <div>
+                <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">TK Định danh NAU</span>
+                <span className="font-mono font-bold text-nau-text dark:text-nau-text text-xs">
+                  {currentUser?.studentId || currentUser?.id?.slice(0, 12) || 'NAU-USER'}
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  navigator.clipboard.writeText(currentUser?.studentId || currentUser?.id || '');
+                  toast.success('Đã sao chép mã định danh!');
+                }}
+                className="p-1.5 rounded-lg bg-white dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500 transition-colors"
+                title="Sao chép mã"
+              >
+                <Copy className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Reputation Points / Coins card */}
+            <div className="bg-amber-50/70 dark:bg-amber-950/20 p-3.5 rounded-2xl border border-amber-200/60 dark:border-amber-900/40 flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-xl bg-amber-400 text-slate-950 flex items-center justify-center font-black">
+                  <Coins className="w-4 h-4" />
+                </div>
+                <div>
+                  <span className="text-[10px] text-amber-700 dark:text-amber-400 font-bold uppercase tracking-wider block">Điểm Uy Tín Trao Đổi</span>
+                  <span className="font-black text-amber-900 dark:text-amber-200 text-sm">
+                    {Math.round((currentUser?.rating || 5.0) * 20)} Điểm
+                  </span>
+                </div>
+              </div>
+              <span className="text-[10px] font-bold px-2 py-1 rounded-lg bg-white/80 dark:bg-slate-900/80 text-amber-700 dark:text-amber-300">
+                Xuất sắc
+              </span>
+            </div>
+          </div>
+        )}
+
       </div>
+
+      {/* Utilities List on Mobile & Desktop (Nhóm Tiện ích chuẩn Chợ Tốt) */}
+      {isViewingSelf && (
+        <div className="bg-nau-surface dark:bg-nau-background rounded-3xl border border-nau-border dark:border-nau-border p-4 sm:p-5 shadow-xs space-y-4">
+          <h2 className="text-xs font-black uppercase tracking-wider text-slate-400">
+            Tiện ích & Quản lý
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 text-xs">
+            <Link
+              to="/manage-listings"
+              className="flex items-center justify-between p-3 rounded-2xl bg-slate-50 dark:bg-slate-900/60 hover:bg-amber-50 dark:hover:bg-slate-800 transition-colors border border-slate-100 dark:border-slate-800"
+            >
+              <div className="flex items-center gap-2.5 font-bold">
+                <Tag className="w-4 h-4 text-amber-500" />
+                <span>Quản lý tin đăng</span>
+              </div>
+              <span className="text-[10px] font-bold text-amber-600 dark:text-amber-400 bg-amber-100/70 dark:bg-amber-950 px-2 py-0.5 rounded-full">
+                {products.length} tin
+              </span>
+            </Link>
+
+            <Link
+              to="/saved"
+              className="flex items-center justify-between p-3 rounded-2xl bg-slate-50 dark:bg-slate-900/60 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors border border-slate-100 dark:border-slate-800"
+            >
+              <div className="flex items-center gap-2.5 font-bold">
+                <Bookmark className="w-4 h-4 text-red-500" />
+                <span>Tin đã lưu yêu thích</span>
+              </div>
+              <ChevronRight className="w-4 h-4 text-slate-400" />
+            </Link>
+
+            <Link
+              to="/orders"
+              className="flex items-center justify-between p-3 rounded-2xl bg-slate-50 dark:bg-slate-900/60 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors border border-slate-100 dark:border-slate-800"
+            >
+              <div className="flex items-center gap-2.5 font-bold">
+                <Package className="w-4 h-4 text-blue-500" />
+                <span>Lịch sử đơn hàng</span>
+              </div>
+              <ChevronRight className="w-4 h-4 text-slate-400" />
+            </Link>
+
+            <Link
+              to="/verification"
+              className="flex items-center justify-between p-3 rounded-2xl bg-slate-50 dark:bg-slate-900/60 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors border border-slate-100 dark:border-slate-800"
+            >
+              <div className="flex items-center gap-2.5 font-bold">
+                <ShieldCheck className="w-4 h-4 text-emerald-500" />
+                <span>Xác thực Thẻ SV / CCCD</span>
+              </div>
+              <ChevronRight className="w-4 h-4 text-slate-400" />
+            </Link>
+
+            <button
+              type="button"
+              onClick={() => setActiveTab('edit')}
+              className="flex items-center justify-between p-3 rounded-2xl bg-slate-50 dark:bg-slate-900/60 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors border border-slate-100 dark:border-slate-800 text-left cursor-pointer"
+            >
+              <div className="flex items-center gap-2.5 font-bold">
+                <Edit3 className="w-4 h-4 text-slate-500" />
+                <span>Cài đặt thông tin tài khoản</span>
+              </div>
+              <ChevronRight className="w-4 h-4 text-slate-400" />
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Tabs Menu */}
       <div className="flex gap-2 border-b border-nau-border dark:border-nau-border pb-2 overflow-x-auto text-xs font-bold">
@@ -188,7 +313,7 @@ export const ProfilePage = () => {
               : 'text-nau-text-secondary dark:text-nau-text-muted hover:bg-slate-100 dark:hover:bg-slate-800'
           }`}
         >
-          Đã bán ({soldProducts.length})
+          Đã bán / Ẩn ({soldProducts.length})
         </button>
         <button
           onClick={() => setActiveTab('ratings')}
@@ -211,7 +336,7 @@ export const ProfilePage = () => {
                 Người dùng hiện không có sản phẩm nào đang rao bán.
               </div>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 sm:gap-6">
                 {activeProducts.map(p => (
                   <ProductCard key={p.id} product={p} />
                 ))}
@@ -224,10 +349,10 @@ export const ProfilePage = () => {
           <div>
             {soldProducts.length === 0 ? (
               <div className="p-8 text-center text-slate-400">
-                Chưa có sản phẩm nào đã bán.
+                Chưa có sản phẩm nào đã bán hoặc ẩn.
               </div>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 sm:gap-6">
                 {soldProducts.map(p => (
                   <ProductCard key={p.id} product={p} />
                 ))}

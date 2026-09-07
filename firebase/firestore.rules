@@ -157,5 +157,12 @@ service cloud.firestore {
       allow read: if true;
       allow write: if isAdmin() || isAuthenticated();
     }
+
+    // 8. Banned Users
+    match /banned_users/{userId} {
+      // Must allow read so client auth listener can inspect ban notices & custom reason
+      allow read: if true;
+      allow write: if isAdmin();
+    }
   }
 }

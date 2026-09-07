@@ -20,6 +20,7 @@ const CartPage = lazy(() => import('../pages/Cart/CartPage').then(m => ({ defaul
 const OrdersPage = lazy(() => import('../pages/Orders/OrdersPage').then(m => ({ default: m.OrdersPage })));
 const ProfilePage = lazy(() => import('../pages/Profile/ProfilePage').then(m => ({ default: m.ProfilePage })));
 const SavedProductsPage = lazy(() => import('../pages/SavedProducts/SavedProductsPage').then(m => ({ default: m.SavedProductsPage })));
+const ManageListingsPage = lazy(() => import('../pages/ManageListings/ManageListingsPage').then(m => ({ default: m.ManageListingsPage })));
 
 // Lazy-loaded Admin SaaS Dashboard Pages
 const AdminDashboardPage = lazy(() => import('../pages/Admin/AdminDashboardPage').then(m => ({ default: m.AdminDashboardPage })));
@@ -58,6 +59,7 @@ export const AppRoutes = () => {
             <Route path="cart" element={<CartPage />} />
             <Route path="orders" element={<OrdersPage />} />
             <Route path="profile" element={<ProfilePage />} />
+            <Route path="manage-listings" element={<ManageListingsPage />} />
             <Route path="saved" element={<SavedProductsPage />} />
           </Route>
 

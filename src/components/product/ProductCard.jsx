@@ -109,63 +109,62 @@ export const ProductCard = ({ product }) => {
       </Link>
 
       {/* Card Body */}
-      <div className="p-3.5 sm:p-4 flex-1 flex flex-col justify-between">
+      <div className="p-2.5 sm:p-4 flex-1 flex flex-col justify-between">
         <div>
           {/* Price & Original Price */}
-          <div className="flex items-baseline gap-2 mb-1.5">
-            <span className="text-base sm:text-lg font-black text-nau-red dark:text-nau-red-hover">
+          <div className="flex flex-wrap items-baseline gap-1.5 mb-1">
+            <span className="text-sm sm:text-base font-black text-nau-red dark:text-nau-red-hover">
               {formatCurrency(product.price)}
             </span>
             {product.originalPrice && product.originalPrice > product.price && (
-              <span className="text-xs text-slate-400 line-through">
+              <span className="text-[10px] sm:text-xs text-slate-400 line-through">
                 {formatCurrency(product.originalPrice)}
               </span>
             )}
           </div>
 
           {/* Product Title */}
-          <Link to={`/product/${product.id}`} className="block group-hover:text-nau-red dark:group-hover:text-nau-red-hover transition-colors mb-2">
+          <Link to={`/product/${product.id}`} className="block group-hover:text-nau-red dark:group-hover:text-nau-red-hover transition-colors mb-1.5">
             <h3 className="text-xs sm:text-sm font-bold text-nau-text dark:text-nau-text line-clamp-2 leading-snug">
               {product.title}
             </h3>
           </Link>
 
           {/* Condition Tag & Location on separate row below title */}
-          <div className="flex flex-wrap items-center gap-1.5 text-[11px] text-nau-text-muted dark:text-nau-text-muted">
+          <div className="flex flex-wrap items-center gap-1 text-[10px] sm:text-[11px] text-nau-text-muted dark:text-nau-text-muted">
             {product.condition && (
-              <span className="inline-block px-1.5 py-0.5 rounded bg-slate-100 dark:bg-nau-surface text-[10px] font-medium text-slate-600 dark:text-slate-300">
+              <span className="inline-block px-1 py-0.2 rounded bg-slate-100 dark:bg-nau-surface text-[9px] sm:text-[10px] font-medium text-slate-600 dark:text-slate-300">
                 {product.condition}
               </span>
             )}
-            <div className="flex items-center gap-0.5 truncate">
-              <MapPin className="w-3 h-3 text-slate-400 shrink-0" />
+            <div className="flex items-center gap-0.5 truncate max-w-full">
+              <MapPin className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-slate-400 shrink-0" />
               <span className="truncate">{product.location}</span>
             </div>
           </div>
         </div>
 
         {/* Footer: Seller info & Actions */}
-        <div className="pt-3 mt-3 border-t border-slate-100 dark:border-nau-border flex items-center justify-between gap-2">
+        <div className="pt-2 mt-2 sm:pt-3 sm:mt-3 border-t border-slate-100 dark:border-nau-border flex items-center justify-between gap-1.5">
           {/* Seller */}
-          <div className="flex items-center gap-2 min-w-0">
+          <div className="flex items-center gap-1.5 min-w-0">
             <img
               src={product.sellerAvatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=80'}
               alt={product.sellerName}
-              className="w-6 h-6 rounded-full object-cover border border-nau-border dark:border-nau-border shrink-0"
+              className="w-5 h-5 sm:w-6 sm:h-6 rounded-full object-cover border border-nau-border dark:border-nau-border shrink-0"
             />
             <div className="min-w-0">
-              <div className="flex items-center gap-1">
-                <span className="text-[11px] font-semibold text-nau-text dark:text-nau-text truncate">
+              <div className="flex items-center gap-0.5 sm:gap-1">
+                <span className="text-[10px] sm:text-[11px] font-semibold text-nau-text dark:text-nau-text truncate max-w-[70px] sm:max-w-[100px]">
                   {product.sellerName}
                 </span>
                 {product.sellerVerified && (
-                  <CheckCircle className="w-3 h-3 text-nau-success shrink-0" title="Sinh viên đã xác thực" />
+                  <CheckCircle className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-nau-success shrink-0" title="Sinh viên đã xác thực" />
                 )}
               </div>
-              <div className="flex items-center gap-1 text-[10px] text-nau-warning font-medium">
+              <div className="flex items-center gap-0.5 text-[9px] sm:text-[10px] text-nau-warning font-medium">
                 <Star className="w-2.5 h-2.5 fill-nau-warning text-nau-warning" />
                 <span>{product.sellerRating || 5.0}</span>
-                <span className="text-slate-400">({product.sellerRatingCount || 0})</span>
               </div>
             </div>
           </div>
@@ -175,14 +174,14 @@ export const ProductCard = ({ product }) => {
             <button
               onClick={handleAddToCart}
               type="button"
-              className="p-2 rounded-xl bg-nau-red-light hover:bg-nau-red text-nau-red hover:text-white dark:bg-nau-surface dark:hover:bg-nau-red dark:text-nau-red dark:hover:text-white transition-all shadow-xs active:scale-95 shrink-0"
+              className="p-1.5 sm:p-2 rounded-xl bg-nau-red-light hover:bg-nau-red text-nau-red hover:text-white dark:bg-nau-surface dark:hover:bg-nau-red dark:text-nau-red dark:hover:text-white transition-all shadow-xs active:scale-95 shrink-0"
               title="Thêm vào giỏ hàng"
             >
-              <ShoppingCart className="w-4 h-4" />
+              <ShoppingCart className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             </button>
           ) : (
-            <span className="text-[10px] font-bold text-slate-400 bg-slate-100 dark:bg-nau-surface px-2 py-1 rounded-lg">
-              Đã giao dịch
+            <span className="text-[9px] sm:text-[10px] font-bold text-slate-400 bg-slate-100 dark:bg-nau-surface px-1.5 py-0.5 rounded-md">
+              Đã bán
             </span>
           )}
         </div>

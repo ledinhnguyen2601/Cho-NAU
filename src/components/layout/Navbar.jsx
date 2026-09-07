@@ -19,7 +19,9 @@ import {
   Menu, 
   X,
   BadgeCheck,
-  Building2
+  Building2,
+  Tag,
+  Heart
 } from 'lucide-react';
 
 export const Navbar = () => {
@@ -129,6 +131,15 @@ export const Navbar = () => {
           <div className="flex items-center gap-2 sm:gap-3">
             {/* Dark/Light Mode Toggle */}
             <ThemeToggle />
+
+            {/* Saved items / Wishlist */}
+            <Link
+              to="/saved"
+              className="relative p-2 rounded-xl text-nau-text-secondary dark:text-nau-text-secondary hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+              title="Tin đã lưu"
+            >
+              <Heart className="w-5 h-5" />
+            </Link>
 
             {/* Chat Direct Messenger */}
             <Link
@@ -248,6 +259,14 @@ export const Navbar = () => {
                           <span>Trang cá nhân & Uy tín</span>
                         </Link>
                         <Link
+                          to="/manage-listings"
+                          onClick={() => setIsUserMenuOpen(false)}
+                          className="flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 font-semibold text-amber-600 dark:text-amber-400"
+                        >
+                          <Tag className="w-4 h-4 text-amber-500" />
+                          <span>Quản lý tin đăng</span>
+                        </Link>
+                        <Link
                           to="/chat"
                           onClick={() => setIsUserMenuOpen(false)}
                           className="flex items-center justify-between px-3 py-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800"
@@ -325,20 +344,20 @@ export const Navbar = () => {
 
         </div>
 
-        {/* Mobile Search Bar */}
-        <div className="md:hidden pb-3">
+        {/* Mobile Search Bar - Bo tròn chuẩn phong cách Chợ Tốt */}
+        <div className="md:hidden pb-3 pt-1">
           <form onSubmit={handleSearch} className="relative w-full">
             <input
               type="text"
-              placeholder="Tìm giáo trình, laptop, xe đạp NAU..."
+              placeholder="Tìm sản phẩm, giáo trình, xe đạp, phòng trọ..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-9 pr-20 py-2 text-xs rounded-xl border border-nau-border dark:border-nau-border bg-nau-background dark:bg-nau-background text-nau-text dark:text-nau-text placeholder-slate-400 focus:outline-none focus:border-nau-red"
+              className="w-full pl-10 pr-16 py-2 text-xs rounded-full border border-slate-200 dark:border-slate-700 bg-slate-100/90 dark:bg-slate-800 text-nau-text dark:text-nau-text placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-nau-red/30 focus:border-nau-red focus:bg-white dark:focus:bg-slate-900 transition-all shadow-xs"
             />
-            <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+            <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
             <button
               type="submit"
-              className="absolute right-1 top-1/2 -translate-y-1/2 px-2.5 py-1 bg-nau-red text-white text-[11px] font-bold rounded-lg"
+              className="absolute right-1.5 top-1/2 -translate-y-1/2 px-3 py-1 bg-nau-red hover:bg-nau-red-hover text-white text-[11px] font-bold rounded-full transition-colors shadow-xs"
             >
               Tìm
             </button>

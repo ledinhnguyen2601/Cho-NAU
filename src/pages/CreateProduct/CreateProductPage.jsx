@@ -199,49 +199,71 @@ export const CreateProductPage = () => {
 
         <form onSubmit={handleSubmit} className="space-y-6">
           
-          {/* Images Upload Section */}
-          <div className="space-y-2">
-            <label className="block text-xs font-bold text-nau-text dark:text-nau-text uppercase tracking-wider">
-              Hình ảnh thực tế sản phẩm <span className="text-nau-red">* (1 - 6 ảnh)</span>
-            </label>
-
-            {/* Images Grid preview */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              {form.images.map((img, idx) => (
-                <div key={idx} className="relative aspect-[4/3] rounded-2xl overflow-hidden border border-nau-border dark:border-nau-border group">
-                  <img src={img} alt="Product preview" className="w-full h-full object-cover" />
-                  <button
-                    type="button"
-                    onClick={() => handleRemoveImage(idx)}
-                    className="absolute top-1.5 right-1.5 p-1 rounded-full bg-slate-900/80 text-white hover:bg-nau-danger transition-colors"
-                  >
-                    <X className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-              ))}
-
-              {form.images.length < 6 && (
-                <label className="aspect-[4/3] rounded-2xl border-2 border-dashed border-nau-border dark:border-nau-border hover:border-nau-primary bg-nau-background dark:bg-nau-surface/50 flex flex-col items-center justify-center p-3 cursor-pointer transition-colors text-slate-400 hover:text-nau-primary">
-                  <Upload className="w-6 h-6 mb-1" />
-                  <span className="text-[11px] font-bold text-center">Tải ảnh lên</span>
-                  <input
-                    type="file"
-                    multiple
-                    accept="image/*"
-                    onChange={handleImageUpload}
-                    className="hidden"
-                    disabled={isUploading}
-                  />
-                </label>
-              )}
+          {/* Images Upload Section - Phong cách Chợ Tốt */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <label className="block text-xs font-black text-nau-text dark:text-nau-text uppercase tracking-wider">
+                Hình ảnh sản phẩm <span className="text-nau-red">* (Tối đa 6 ảnh)</span>
+              </label>
+              <span className="text-xs font-bold text-amber-600 dark:text-amber-400">{form.images.length}/6 ảnh</span>
             </div>
 
-            {isUploading && (
-              <div className="w-full bg-slate-100 dark:bg-nau-surface h-1.5 rounded-full overflow-hidden">
-                <div
-                  style={{ width: `${uploadProgress}%` }}
-                  className="bg-nau-primary h-full transition-all duration-300"
+            {/* Upload Zone */}
+            {form.images.length < 6 && (
+              <label className="block bg-amber-50/70 hover:bg-amber-100/70 dark:bg-amber-950/20 dark:hover:bg-amber-950/30 border-2 border-dashed border-amber-300 dark:border-amber-700/60 rounded-3xl p-6 sm:p-8 text-center cursor-pointer transition-all group shadow-inner">
+                <div className="w-14 h-14 rounded-2xl bg-amber-400 text-slate-950 flex items-center justify-center mx-auto shadow-md group-hover:scale-105 transition-transform">
+                  <Upload className="w-7 h-7 stroke-[2.5]" />
+                </div>
+                <p className="text-sm font-black text-slate-800 dark:text-slate-100 mt-2.5">
+                  Thêm ảnh sản phẩm
+                </p>
+                <p className="text-xs text-amber-800 dark:text-amber-300 mt-0.5 font-medium">
+                  Chụp góc rõ nét để sinh viên khác dễ dàng liên hệ mua
+                </p>
+                <input
+                  type="file"
+                  multiple
+                  accept="image/*"
+                  onChange={handleImageUpload}
+                  className="hidden"
+                  disabled={isUploading}
                 />
+              </label>
+            )}
+
+            {/* Images Grid preview */}
+            {form.images.length > 0 && (
+              <div className="grid grid-cols-3 sm:grid-cols-6 gap-2.5 pt-1">
+                {form.images.map((img, idx) => (
+                  <div key={idx} className="relative aspect-square rounded-2xl overflow-hidden border-2 border-amber-400 dark:border-amber-500 group shadow-xs">
+                    <img src={img} alt="Product preview" className="w-full h-full object-cover" />
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveImage(idx)}
+                      className="absolute top-1 right-1 p-1 rounded-full bg-slate-900/80 text-white hover:bg-nau-danger transition-colors cursor-pointer"
+                      title="Xóa ảnh này"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                    <span className="absolute bottom-1 left-1 bg-slate-950/70 text-white text-[9px] px-1.5 py-0.2 rounded font-bold">
+                      Ảnh {idx + 1}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {isUploading && (
+              <div className="space-y-1 pt-2">
+                <div className="w-full bg-slate-100 dark:bg-nau-surface h-2 rounded-full overflow-hidden">
+                  <div
+                    style={{ width: `${uploadProgress}%` }}
+                    className="bg-amber-400 h-full transition-all duration-300"
+                  />
+                </div>
+                <p className="text-[11px] text-amber-600 font-bold text-center">
+                  Đang xử lý tải ảnh lên ({uploadProgress}%)...
+                </p>
               </div>
             )}
 
@@ -332,24 +354,31 @@ export const CreateProductPage = () => {
             )}
           </div>
 
-          {/* Submit */}
-          <div className="pt-4 border-t border-slate-100 dark:border-nau-border flex justify-end gap-3">
+          {/* Submit CTA - Chuẩn Chợ Tốt */}
+          <div className="pt-4 border-t border-slate-100 dark:border-nau-border flex flex-col sm:flex-row justify-end gap-3">
             <Button
               variant="outline"
               size="md"
               type="button"
               onClick={() => navigate(-1)}
+              className="order-2 sm:order-1"
             >
-              Hủy
+              Hủy bỏ
             </Button>
-            <Button
-              variant="primary"
-              size="md"
+            <button
               type="submit"
-              isLoading={isSubmitting}
+              disabled={isSubmitting}
+              className="order-1 sm:order-2 w-full sm:w-auto px-8 py-3.5 bg-gradient-to-r from-amber-400 to-yellow-400 hover:from-amber-500 hover:to-yellow-500 text-slate-950 font-black text-sm rounded-2xl shadow-lg shadow-amber-400/30 active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
             >
-              Đăng Tin Bán Ngay
-            </Button>
+              {isSubmitting ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-slate-950 border-t-transparent rounded-full animate-spin" />
+                  <span>Đang tải tin đăng...</span>
+                </>
+              ) : (
+                <span>ĐĂNG TIN NGAY</span>
+              )}
+            </button>
           </div>
 
         </form>
