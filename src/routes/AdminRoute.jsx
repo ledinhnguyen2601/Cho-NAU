@@ -3,6 +3,8 @@ import { Navigate, Outlet } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 
+import { NauLoadingLogo } from '../components/brand/NauLoadingLogo';
+
 export const AdminRoute = ({ children }) => {
   const { currentUser, isAdmin, loading } = useAuth();
   const toast = useToast();
@@ -15,8 +17,8 @@ export const AdminRoute = ({ children }) => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-nau-primary" />
+      <div className="flex items-center justify-center min-h-screen p-6">
+        <NauLoadingLogo size="md" text="Đang kiểm tra quyền quản trị..." />
       </div>
     );
   }

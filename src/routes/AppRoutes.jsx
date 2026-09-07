@@ -34,10 +34,11 @@ const AdminSettingsPage = lazy(() => import('../pages/Admin/AdminSettingsPage').
 // 404 Page
 const NotFoundPage = lazy(() => import('../pages/NotFound/NotFoundPage').then(m => ({ default: m.NotFoundPage })));
 
+import { NauLoadingLogo } from '../components/brand/NauLoadingLogo';
+
 const PageLoader = () => (
-  <div className="min-h-[50vh] flex flex-col items-center justify-center space-y-3">
-    <div className="w-8 h-8 border-3 border-nau-red/30 border-t-nau-red rounded-full animate-spin" />
-    <span className="text-xs font-semibold text-nau-text-muted">Đang tải trang...</span>
+  <div className="min-h-[60vh] flex flex-col items-center justify-center p-6">
+    <NauLoadingLogo size="md" text="Đang tải trang..." />
   </div>
 );
 

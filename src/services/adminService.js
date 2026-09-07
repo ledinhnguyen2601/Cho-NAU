@@ -150,7 +150,7 @@ export const getAllUsers = async () => {
       faculty: isSuperAdmin ? (u.faculty || 'Đại học Nghệ An') : (u.faculty || 'Đại học Nghệ An'),
       warningCount: userOverride.warningCount !== undefined ? userOverride.warningCount : (u.warningCount || 0),
       warnings: userOverride.warnings || u.warnings || [],
-      isOnline: u.isOnline === true || (u.lastActive && (Date.now() - (parseDate(u.lastActive)?.getTime() || 0)) < 5 * 60 * 1000)
+      isOnline: Boolean(u.isOnline) && Boolean(u.lastActive) && (Date.now() - (parseDate(u.lastActive)?.getTime() || 0)) < 3 * 60 * 1000
     };
   });
 };

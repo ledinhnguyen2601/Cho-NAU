@@ -10,6 +10,7 @@ import {
   deleteProduct 
 } from '../../services/productService';
 import { formatCurrency, formatDateTime, getVerificationBadgeInfo } from '../../utils/formatters';
+import { NauLoadingLogo } from '../../components/brand/NauLoadingLogo';
 import { Button } from '../../components/common/Button';
 import { Modal } from '../../components/common/Modal';
 import { 
@@ -159,7 +160,7 @@ export const ManageListingsPage = () => {
               {currentUser?.faculty || 'Đại học Nghệ An'} • Mã SV: <strong>{currentUser?.studentId || 'Chưa cập nhật'}</strong>
             </p>
             <div className="flex items-center gap-2 text-xs text-amber-500 font-bold mt-1">
-              <span>★ {currentUser?.rating || 5.0}</span>
+              <span>★ {currentUser?.ratingCount > 0 ? (currentUser?.rating || 0) : '0.0'}</span>
               <span className="text-slate-400 font-normal">({products.length} tin đăng đã tạo)</span>
             </div>
           </div>
@@ -260,9 +261,8 @@ export const ManageListingsPage = () => {
 
       {/* Products Listings List */}
       {isLoading ? (
-        <div className="p-12 text-center space-y-3">
-          <div className="w-8 h-8 border-3 border-amber-400 border-t-transparent rounded-full animate-spin mx-auto" />
-          <p className="text-xs text-slate-400 font-semibold">Đang tải tin đăng của bạn...</p>
+        <div className="p-12 text-center">
+          <NauLoadingLogo size="sm" text="Đang tải tin đăng của bạn..." />
         </div>
       ) : currentTabProducts.length === 0 ? (
         /* Empty State chuẩn phong cách Chợ Tốt */

@@ -37,9 +37,9 @@ export const sendEmailNotification = async ({
       if (type === 'verification_result' && globalConfig.notifyEmailOnVerification === false) return false;
     }
 
-    const serviceId = import.meta.env.VITE_EMAILJS_SERVICE_ID;
-    const templateId = import.meta.env.VITE_EMAILJS_TEMPLATE_ID;
-    const publicKey = import.meta.env.VITE_EMAILJS_PUBLIC_KEY;
+    const serviceId = import.meta.env.VITE_EMAILJS_SERVICE_ID || globalConfig?.emailjsServiceId;
+    const templateId = import.meta.env.VITE_EMAILJS_TEMPLATE_ID || globalConfig?.emailjsTemplateId;
+    const publicKey = import.meta.env.VITE_EMAILJS_PUBLIC_KEY || globalConfig?.emailjsPublicKey;
 
     // Direct dispatch via EmailJS REST API if keys are provided
     if (serviceId && templateId && publicKey) {
@@ -118,13 +118,13 @@ export const notifyOfflineReceiver = async ({ receiverId, senderName, messageTex
       const userData = userDoc.data();
       if (!userData.email) return;
 
-      // Check if user is offline or not active recently
-      const isOnline = userData.isOnline === true;
+      // Check if user is offline: either isOnline is false, or lastActive is older than 3 minutes
       const lastActiveDate = parseDate(userData.lastActive);
       const lastActiveTime = lastActiveDate ? lastActiveDate.getTime() : 0;
-      const isRecentlyActive = (Date.now() - lastActiveTime) < 2 * 60 * 1000; // 2 minutes
+      const isOnline = Boolean(userData.isOnline) && (Date.now() - lastActiveTime) < 3 * 60 * 1000;
 
-      if (!isOnline || !isRecentlyActive) {
+      if (!isOnline) {
+        console.log(`[EMAIL NOTIFICATION] Receiver ${userData.email} is OFFLINE (last active: ${userData.lastActive || 'chưa ghi nhận'}). Dispatching offline alert email.`);
         await sendEmailNotification({
           toEmail: userData.email,
           toName: userData.name,
@@ -136,6 +136,8 @@ export const notifyOfflineReceiver = async ({ receiverId, senderName, messageTex
             actionUrl: `${window.location.origin}/chat?convId=${conversationId}`
           }
         });
+      } else {
+        console.log(`[EMAIL NOTIFICATION] Receiver ${userData.email} is ONLINE right now. Skipping offline email.`);
       }
     }
   } catch (err) {

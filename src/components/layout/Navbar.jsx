@@ -76,13 +76,6 @@ export const Navbar = () => {
 
   return (
     <header className="sticky top-0 z-40 w-full border-b border-nau-border/80 dark:border-nau-border/80 bg-nau-surface/90 dark:bg-nau-background/90 backdrop-blur-md transition-colors">
-      {/* Top Banner Alert for NAU Students */}
-      <div className="bg-nau-red text-white text-[11px] sm:text-xs py-1.5 px-4 text-center font-medium tracking-wide flex items-center justify-center gap-2 shadow-xs">
-        <Building2 className="w-3.5 h-3.5 shrink-0 hidden sm:inline" />
-        <span>Cộng đồng Thương Mại Điện Tử Sinh Viên & Giảng Viên Đại Học Nghệ An (NAU)</span>
-        <span className="hidden md:inline bg-white/20 px-2 py-0.5 rounded-full text-[10px] font-bold">100% Đã Xác Thực</span>
-      </div>
-
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16 gap-3">
           
@@ -128,23 +121,23 @@ export const Navbar = () => {
           </form>
 
           {/* Right Action Icons */}
-          <div className="flex items-center gap-2 sm:gap-3">
+          <div className="flex items-center gap-1.5 sm:gap-3">
             {/* Dark/Light Mode Toggle */}
             <ThemeToggle />
 
-            {/* Saved items / Wishlist */}
+            {/* Saved items / Wishlist (Ẩn trên mobile vì đã có trong Tài khoản) */}
             <Link
               to="/saved"
-              className="relative p-2 rounded-xl text-nau-text-secondary dark:text-nau-text-secondary hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+              className="hidden sm:inline-flex relative p-2 rounded-xl text-nau-text-secondary dark:text-nau-text-secondary hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
               title="Tin đã lưu"
             >
               <Heart className="w-5 h-5" />
             </Link>
 
-            {/* Chat Direct Messenger */}
+            {/* Chat Direct Messenger (Ẩn trên mobile vì đã có ở Bottom Nav) */}
             <Link
               to="/chat"
-              className="relative p-2 rounded-xl text-nau-text-secondary dark:text-nau-text-secondary hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+              className="hidden sm:inline-flex relative p-2 rounded-xl text-nau-text-secondary dark:text-nau-text-secondary hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
               title="Tin nhắn giao dịch"
             >
               <MessageSquare className="w-5 h-5" />
@@ -193,8 +186,15 @@ export const Navbar = () => {
             {currentUser ? (
               <div className="relative">
                 <button
-                  onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+                  onClick={() => {
+                    if (window.innerWidth < 768) {
+                      navigate('/profile');
+                    } else {
+                      setIsUserMenuOpen(!isUserMenuOpen);
+                    }
+                  }}
                   className="flex items-center gap-2 p-1 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors border border-transparent hover:border-nau-border dark:border-slate-700"
+                  title="Tài khoản cá nhân"
                 >
                   <div className="relative">
                     <img
@@ -210,9 +210,9 @@ export const Navbar = () => {
                   </span>
                 </button>
 
-                {/* Dropdown Menu */}
+                {/* Dropdown Menu - Chỉ hiển thị trên Desktop (md:block) */}
                 {isUserMenuOpen && (
-                  <>
+                  <div className="hidden md:block">
                     <div className="fixed inset-0 z-40" onClick={() => setIsUserMenuOpen(false)} />
                     <div className="absolute right-0 mt-2 w-64 rounded-2xl bg-nau-surface dark:bg-nau-background border border-nau-border dark:border-nau-border shadow-xl p-2 z-50 animate-slide-up">
                       <div className="p-3 border-b border-slate-100 dark:border-nau-border">
@@ -321,7 +321,7 @@ export const Navbar = () => {
                         </button>
                       </div>
                     </div>
-                  </>
+                  </div>
                 )}
               </div>
             ) : (

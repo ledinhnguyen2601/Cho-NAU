@@ -1,9 +1,12 @@
 // File: src/pages/Admin/AdminSettingsPage.jsx
 import React, { useState, useEffect } from 'react';
 import { useToast } from '../../context/ToastContext';
+import { useAuth } from '../../context/AuthContext';
 import { Button } from '../../components/common/Button';
 import { Input } from '../../components/common/Input';
 import { getSystemSettings, saveSystemSettings } from '../../services/adminService';
+import { sendEmailNotification } from '../../services/emailNotificationService';
+import { NauLoadingLogo } from '../../components/brand/NauLoadingLogo';
 import { 
   Settings, 
   ShieldCheck, 
@@ -14,11 +17,13 @@ import {
   Save,
   Mail,
   CheckCircle2,
-  RefreshCw
+  RefreshCw,
+  Send
 } from 'lucide-react';
 
 export const AdminSettingsPage = () => {
   const toast = useToast();
+  const { currentUser } = useAuth();
 
   const [settings, setSettings] = useState({
     siteName: 'Chợ NAU',
@@ -32,11 +37,15 @@ export const AdminSettingsPage = () => {
     autoExpireDays: 45,
     notifyEmailOnNewMessage: true,
     notifyEmailOnOrderUpdate: true,
-    notifyEmailOnVerification: true
+    notifyEmailOnVerification: true,
+    emailjsServiceId: '',
+    emailjsTemplateId: '',
+    emailjsPublicKey: ''
   });
 
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [isTestingEmail, setIsTestingEmail] = useState(false);
 
   useEffect(() => {
     const fetchSettings = async () => {
@@ -67,6 +76,45 @@ export const AdminSettingsPage = () => {
       setIsSaving(false);
     }
   };
+
+  const handleTestEmail = async () => {
+    setIsTestingEmail(true);
+    try {
+      const targetEmail = currentUser?.email || 'admin@nau.edu.vn';
+      // Save settings to localStorage immediately
+      localStorage.setItem('nau_system_settings', JSON.stringify(settings));
+      
+      const success = await sendEmailNotification({
+        toEmail: targetEmail,
+        toName: currentUser?.name || 'Quản trị viên NAU',
+        subject: `[Chợ NAU - Test] Kiểm thử hệ thống email thông báo tự động`,
+        type: 'new_message',
+        data: {
+          senderName: 'Hệ Thống Kiểm Thử NAU',
+          messageText: 'Xin chào! Đây là thông báo email tự động được kích hoạt để kiểm tra kết nối dịch vụ Email thông báo khi tài khoản offline.',
+          actionUrl: window.location.origin
+        }
+      });
+
+      if (success) {
+        toast.success(`Đã kích hoạt gửi thử email tới ${targetEmail}! Hãy kiểm tra hộp thư đến (hoặc thư mục Spam).`);
+      } else {
+        toast.info('Email đang chạy ở chế độ mô phỏng (Sandbox). Vui lòng nhập EmailJS Keys để gửi thư thật tới hộp thư.');
+      }
+    } catch (err) {
+      toast.error('Lỗi kiểm thử email: ' + err.message);
+    } finally {
+      setIsTestingEmail(false);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[50vh] p-6">
+        <NauLoadingLogo size="md" text="Đang tải cấu hình hệ thống..." />
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-4xl mx-auto space-y-6 animate-fade-in pb-12">
@@ -241,6 +289,50 @@ export const AdminSettingsPage = () => {
                 className="w-5 h-5 rounded text-nau-primary focus:ring-nau-primary border-nau-border"
               />
             </label>
+          </div>
+
+          {/* EmailJS Credentials Inputs */}
+          <div className="pt-4 border-t border-slate-100 dark:border-nau-border space-y-3">
+            <h3 className="text-xs font-bold text-nau-text dark:text-nau-text">
+              Cấu hình dịch vụ EmailJS (Tùy chọn - Để gửi trực tiếp tới hòm thư Gmail/Outlook thật)
+            </h3>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <Input
+                label="EmailJS Service ID"
+                placeholder="service_xxxxx"
+                value={settings.emailjsServiceId || ''}
+                onChange={(e) => setSettings({ ...settings, emailjsServiceId: e.target.value })}
+              />
+              <Input
+                label="EmailJS Template ID"
+                placeholder="template_xxxxx"
+                value={settings.emailjsTemplateId || ''}
+                onChange={(e) => setSettings({ ...settings, emailjsTemplateId: e.target.value })}
+              />
+              <Input
+                label="EmailJS Public Key"
+                placeholder="public_xxxxx"
+                value={settings.emailjsPublicKey || ''}
+                onChange={(e) => setSettings({ ...settings, emailjsPublicKey: e.target.value })}
+              />
+            </div>
+            
+            <div className="flex items-center justify-between pt-2 bg-blue-50/50 dark:bg-blue-950/20 p-3 rounded-2xl border border-blue-200/50 dark:border-blue-900/40">
+              <div className="text-[11px] text-blue-700 dark:text-blue-300">
+                <p className="font-bold">Kiểm thử tính năng gửi email:</p>
+                <p>Bấm nút bên cạnh để gửi email kiểm tra ngay tới <strong>{currentUser?.email || 'email admin'}</strong>.</p>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                type="button"
+                onClick={handleTestEmail}
+                isLoading={isTestingEmail}
+                leftIcon={<Send className="w-3.5 h-3.5" />}
+              >
+                Gửi Thử Email Kiểm Tra
+              </Button>
+            </div>
           </div>
         </div>
 

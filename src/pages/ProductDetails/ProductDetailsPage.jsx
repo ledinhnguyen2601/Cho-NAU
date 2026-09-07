@@ -4,6 +4,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { getProductById, getProducts, toggleSaveProduct, getSavedProductIds } from '../../services/productService';
 import { createOrGetConversation } from '../../services/chatService';
 import { getUserRatings } from '../../services/ratingService';
+import { NauLoadingLogo } from '../../components/brand/NauLoadingLogo';
 import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
 import { useToast } from '../../context/ToastContext';
@@ -95,8 +96,8 @@ export const ProductDetailsPage = () => {
 
   if (isLoading || !product) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-nau-primary" />
+      <div className="flex items-center justify-center min-h-[60vh] p-6">
+        <NauLoadingLogo size="md" text="Đang tải thông tin sản phẩm..." />
       </div>
     );
   }
@@ -331,9 +332,11 @@ export const ProductDetailsPage = () => {
                 </div>
                 
                 <div className="flex items-center gap-1.5 text-xs text-nau-warning font-bold mt-0.5">
-                  <RatingStars rating={product.sellerRating || 5.0} size="sm" />
-                  <span>{product.sellerRating || 5.0}</span>
-                  <span className="text-slate-400 font-normal">({product.sellerRatingCount || 0} đánh giá)</span>
+                  <RatingStars rating={product.sellerRatingCount > 0 ? (product.sellerRating || 0) : 0} size="sm" />
+                  <span>{product.sellerRatingCount > 0 ? (product.sellerRating || 0) : 0}</span>
+                  <span className="text-slate-400 font-normal">
+                    ({product.sellerRatingCount || 0} {product.sellerRatingCount > 0 ? 'đánh giá' : 'lượt đánh giá - Mới tham gia'})
+                  </span>
                 </div>
               </div>
             </div>

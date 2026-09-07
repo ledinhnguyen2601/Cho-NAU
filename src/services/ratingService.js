@@ -55,7 +55,7 @@ export const getUserRatings = async (sellerId) => {
  */
 export const calculateSellerRating = (ratings) => {
   if (!ratings || ratings.length === 0) {
-    return { average: 5.0, count: 0 };
+    return { average: 0.0, count: 0 };
   }
   const sum = ratings.reduce((acc, curr) => acc + curr.stars, 0);
   const average = Number((sum / ratings.length).toFixed(1));

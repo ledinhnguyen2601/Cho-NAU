@@ -164,7 +164,7 @@ export const ProductCard = ({ product }) => {
               </div>
               <div className="flex items-center gap-0.5 text-[9px] sm:text-[10px] text-nau-warning font-medium">
                 <Star className="w-2.5 h-2.5 fill-nau-warning text-nau-warning" />
-                <span>{product.sellerRating || 5.0}</span>
+                <span>{(product.sellerRatingCount > 0 && product.sellerRating) ? product.sellerRating : '0.0'}</span>
               </div>
             </div>
           </div>

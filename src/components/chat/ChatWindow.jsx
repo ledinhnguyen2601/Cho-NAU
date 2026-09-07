@@ -5,7 +5,8 @@ import { MessageBubble } from './MessageBubble';
 import { ChatInput } from './ChatInput';
 import { Modal } from '../common/Modal';
 import { Button } from '../common/Button';
-import { formatCurrency } from '../../utils/formatters';
+import { db, doc, onSnapshot } from '../../config/firebase';
+import { NauLoadingLogo } from '../brand/NauLoadingLogo';
 import { 
   ShieldCheck, 
   ExternalLink, 
@@ -29,6 +30,26 @@ export const ChatWindow = ({
   const messagesContainerRef = useRef(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [otherUserOnline, setOtherUserOnline] = useState(false);
+
+  const otherPartyId = conversation?.sellerId === currentUserId ? conversation?.buyerId : conversation?.sellerId;
+
+  // Track real-time presence of chat partner
+  useEffect(() => {
+    if (!db || !otherPartyId) return;
+    const unsub = onSnapshot(doc(db, 'users', otherPartyId), (docSnap) => {
+      if (docSnap.exists()) {
+        const u = docSnap.data();
+        const lastActiveTime = u.lastActive ? new Date(u.lastActive).getTime() : 0;
+        const isOnline = Boolean(u.isOnline) && (Date.now() - lastActiveTime) < 3 * 60 * 1000;
+        setOtherUserOnline(isOnline);
+      } else {
+        setOtherUserOnline(false);
+      }
+    }, () => setOtherUserOnline(false));
+
+    return () => unsub();
+  }, [otherPartyId]);
 
   const messages = externalMessages !== undefined ? externalMessages : (conversation?.messages || []);
 
@@ -98,8 +119,18 @@ export const ChatWindow = ({
                 <h3 className="text-xs sm:text-sm font-bold text-nau-text dark:text-nau-text truncate">
                   {otherPartyName}
                 </h3>
-                <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" title="Đang trực tuyến" />
-                <span className="text-[9px] sm:text-[10px] px-1.5 py-0.5 bg-emerald-50 text-emerald-600 dark:bg-emerald-950/30 dark:text-emerald-400 font-semibold rounded-full border border-emerald-200 dark:border-emerald-800 shrink-0">
+                {otherUserOnline ? (
+                  <span className="flex items-center gap-1 text-[10px] text-emerald-600 dark:text-emerald-400 font-medium shrink-0" title="Đang trực tuyến">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                    <span>Online</span>
+                  </span>
+                ) : (
+                  <span className="flex items-center gap-1 text-[10px] text-slate-400 font-medium shrink-0" title="Đang offline - tin nhắn sẽ được thông báo qua Email">
+                    <span className="w-2 h-2 rounded-full bg-slate-400" />
+                    <span>Offline</span>
+                  </span>
+                )}
+                <span className="text-[9px] sm:text-[10px] px-1.5 py-0.5 bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300 font-semibold rounded-full border border-slate-200 dark:border-slate-700 shrink-0">
                   {isSeller ? 'Người mua' : 'Người bán'}
                 </span>
               </div>
@@ -168,9 +199,8 @@ export const ChatWindow = ({
         className="flex-1 min-w-0 overflow-y-auto p-3 sm:p-4 space-y-1 overscroll-contain"
       >
         {isLoadingMessages && messages.length === 0 ? (
-          <div className="h-full flex flex-col items-center justify-center text-center p-6 text-slate-400">
-            <div className="w-5 h-5 border-2 border-nau-primary border-t-transparent rounded-full animate-spin mb-2" />
-            <p className="text-xs font-medium">Đang đồng bộ tin nhắn...</p>
+          <div className="h-full flex flex-col items-center justify-center text-center p-6">
+            <NauLoadingLogo size="sm" text="Đang đồng bộ tin nhắn..." />
           </div>
         ) : messages.length === 0 ? (
           <div className="h-full flex flex-col items-center justify-center text-center p-6 text-slate-400 max-w-sm mx-auto">

@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { getAdminStats, getAnalyticsData, getAllUsers } from '../../services/adminService';
 import { approveVerification, rejectVerification } from '../../services/verificationService';
+import { NauLoadingLogo } from '../../components/brand/NauLoadingLogo';
 import { StatCard } from '../../components/admin/StatCard';
 import { ChartOverview } from '../../components/admin/ChartOverview';
 import { VerificationModerationTable } from '../../components/admin/VerificationModerationTable';
@@ -68,8 +69,8 @@ export const AdminDashboardPage = () => {
 
   if (isLoading || !stats || !analytics) {
     return (
-      <div className="flex items-center justify-center min-h-[50vh]">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-nau-primary" />
+      <div className="flex items-center justify-center min-h-[50vh] p-6">
+        <NauLoadingLogo size="md" text="Đang tải dữ liệu báo cáo quản trị..." />
       </div>
     );
   }

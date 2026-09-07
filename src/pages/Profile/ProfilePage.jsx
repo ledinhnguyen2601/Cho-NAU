@@ -147,12 +147,12 @@ export const ProfilePage = () => {
 
             {/* Rating Stars & Count */}
             <div className="flex items-center gap-2 text-xs pt-1">
-              <RatingStars rating={profileUser.rating || 5.0} size="sm" />
+              <RatingStars rating={(profileUser.ratingCount > 0 || ratings.length > 0) ? (profileUser.rating || 0) : 0} size="sm" />
               <span className="font-bold text-nau-text dark:text-nau-text">
-                {profileUser.rating || 5.0} ★
+                {(profileUser.ratingCount > 0 || ratings.length > 0) ? `${profileUser.rating || 0} ★` : '0.0 ★'}
               </span>
               <span className="text-slate-400">
-                ({profileUser.ratingCount || ratings.length} lượt đánh giá uy tín)
+                ({profileUser.ratingCount || ratings.length} {profileUser.ratingCount > 0 || ratings.length > 0 ? 'lượt đánh giá uy tín' : 'lượt đánh giá - Chưa có giao dịch'})
               </span>
             </div>
           </div>
@@ -165,7 +165,7 @@ export const ProfilePage = () => {
                 className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-amber-400 hover:bg-amber-500 text-slate-950 text-xs font-black shadow-xs transition-all"
               >
                 <Tag className="w-3.5 h-3.5" />
-                <span>Quản lý tin đăng</span>
+                <span>Quản lý tin ({products.length})</span>
               </Link>
               <Button
                 variant={activeTab === 'edit' ? 'primary' : 'outline'}
@@ -212,12 +212,12 @@ export const ProfilePage = () => {
                 <div>
                   <span className="text-[10px] text-amber-700 dark:text-amber-400 font-bold uppercase tracking-wider block">Điểm Uy Tín Trao Đổi</span>
                   <span className="font-black text-amber-900 dark:text-amber-200 text-sm">
-                    {Math.round((currentUser?.rating || 5.0) * 20)} Điểm
+                    {currentUser?.ratingCount > 0 ? `${Math.round((currentUser?.rating || 0) * 20)} Điểm` : '0 Điểm (Tài khoản mới)'}
                   </span>
                 </div>
               </div>
               <span className="text-[10px] font-bold px-2 py-1 rounded-lg bg-white/80 dark:bg-slate-900/80 text-amber-700 dark:text-amber-300">
-                Xuất sắc
+                {currentUser?.ratingCount > 0 ? 'Uy tín' : 'Mới tham gia'}
               </span>
             </div>
           </div>

@@ -103,10 +103,9 @@ export const UserModerationTable = ({
                 const warningCount = u.warningCount || 0;
                 const canBan = warningCount >= 1;
                 
-                // Check if user is online or active within 5 minutes
-                const isOnline = u.isOnline === true || (
-                  u.lastActive && (Date.now() - (parseDate(u.lastActive)?.getTime() || 0)) < 5 * 60 * 1000
-                );
+                // Check if user is truly online: isOnline true AND heartbeat within 3 minutes
+                const lastActiveTime = u.lastActive ? (parseDate(u.lastActive)?.getTime() || 0) : 0;
+                const isOnline = Boolean(u.isOnline) && Boolean(u.lastActive) && (Date.now() - lastActiveTime) < 3 * 60 * 1000;
 
                 return (
                   <tr key={u.id} className="hover:bg-nau-background/80 dark:hover:bg-slate-800/40 transition-colors">
@@ -177,7 +176,7 @@ export const UserModerationTable = ({
                     <td className="px-3 py-3.5">
                       <div className="flex items-center gap-1 font-bold text-nau-warning">
                         <Star className="w-3.5 h-3.5 fill-nau-warning" />
-                        <span>{u.rating || 5.0}</span>
+                        <span>{(u.ratingCount > 0 && u.rating) ? u.rating : '0.0'}</span>
                       </div>
                     </td>
 

@@ -86,7 +86,7 @@ export const AuthProvider = ({ children }) => {
           verificationDocument: null,
           faculty: 'Đại học Nghệ An',
           studentId: isDefaultAdmin ? 'ADMIN-NAU' : '',
-          rating: 5.0,
+          rating: 0.0,
           ratingCount: 0,
           status: 'active',
           phone: fbUser.phoneNumber || '',

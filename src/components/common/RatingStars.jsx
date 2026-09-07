@@ -3,7 +3,7 @@ import React from 'react';
 import { Star } from 'lucide-react';
 
 export const RatingStars = ({
-  rating = 5,
+  rating = 0,
   maxStars = 5,
   size = 'md', // 'sm' | 'md' | 'lg'
   interactive = false,

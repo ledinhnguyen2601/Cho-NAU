@@ -168,7 +168,7 @@ export const createProduct = async (productData, currentUser) => {
     sellerId: uid,
     sellerName: currentUser?.name || auth?.currentUser?.displayName || 'Sinh viên NAU',
     sellerAvatar: currentUser?.avatar || auth?.currentUser?.photoURL || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
-    sellerRating: Number(currentUser?.rating || 5.0),
+    sellerRating: (currentUser?.ratingCount > 0) ? Number(currentUser?.rating || 0) : 0.0,
     sellerRatingCount: Number(currentUser?.ratingCount || 0),
     sellerVerified: currentUser?.verificationStatus === 'verified' || currentUser?.role === 'admin',
     price: Number(cleanData.price || 0),
