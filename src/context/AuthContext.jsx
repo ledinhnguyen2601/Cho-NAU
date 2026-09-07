@@ -72,11 +72,31 @@ export const AuthProvider = ({ children }) => {
       }
 
       if (fbUser) {
-        try {
-          const userEmail = (fbUser.email || '').toLowerCase();
-          const isDefaultAdmin = ADMIN_EMAILS.includes(userEmail);
+        const userEmail = (fbUser.email || '').toLowerCase();
+        const isDefaultAdmin = ADMIN_EMAILS.includes(userEmail);
 
-          // Check if user has been permanently banned
+        // 1. Construct reliable base user from Firebase Auth immediately
+        const baseUser = {
+          id: fbUser.uid,
+          name: fbUser.displayName || 'Sinh viên NAU',
+          email: fbUser.email || '',
+          avatar: fbUser.photoURL || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
+          role: isDefaultAdmin ? 'admin' : 'user',
+          verificationStatus: isDefaultAdmin ? 'verified' : 'new',
+          verificationDocument: null,
+          faculty: 'Đại học Nghệ An',
+          studentId: isDefaultAdmin ? 'ADMIN-NAU' : '',
+          rating: 5.0,
+          ratingCount: 0,
+          status: 'active',
+          phone: fbUser.phoneNumber || '',
+          isOnline: true,
+          lastActive: new Date().toISOString(),
+          joinedDate: new Date().toISOString()
+        };
+
+        // 2. Safely check if user is in banned_users collection (isolated try/catch)
+        try {
           const bannedDocRef = doc(db, 'banned_users', fbUser.uid);
           const bannedSnap = await getDoc(bannedDocRef);
           if (bannedSnap.exists()) {
@@ -87,76 +107,72 @@ export const AuthProvider = ({ children }) => {
             setLoading(false);
             return;
           }
+        } catch (banErr) {
+          console.warn('Ban status check warning (bypassed if rules not yet deployed):', banErr);
+        }
 
-          // Fetch user profile from Firestore
+        // 3. Fetch or synchronize Firestore user profile (isolated try/catch)
+        let finalUser = { ...baseUser };
+        try {
           const userDocRef = doc(db, 'users', fbUser.uid);
           const userSnap = await getDoc(userDocRef);
 
-          let userData;
           if (userSnap.exists()) {
-            userData = userSnap.data();
-            // Automatically upgrade white-listed admin to 'admin' and 'verified'
-            if (isDefaultAdmin && (userData.role !== 'admin' || userData.verificationStatus !== 'verified')) {
-              userData.role = 'admin';
-              userData.verificationStatus = 'verified';
-              try {
-                await setDoc(userDocRef, { role: 'admin', verificationStatus: 'verified' }, { merge: true });
-              } catch (e) {
-                console.warn('Could not sync admin role to Firestore:', e);
-              }
-            }
-            // Mark online
-            userData.isOnline = true;
-            userData.lastActive = new Date().toISOString();
-            await setDoc(userDocRef, { isOnline: true, lastActive: userData.lastActive }, { merge: true }).catch(() => {});
-            setCurrentUser({ id: fbUser.uid, ...userData });
-          } else {
-            // New user registration in Firestore
-            const newUser = {
+            const firestoreData = userSnap.data();
+            finalUser = {
+              ...baseUser,
+              ...firestoreData,
               id: fbUser.uid,
-              name: fbUser.displayName || 'Sinh viên NAU',
-              email: fbUser.email,
-              avatar: fbUser.photoURL || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
-              role: isDefaultAdmin ? 'admin' : 'user',
-              verificationStatus: isDefaultAdmin ? 'verified' : 'new', // new | pending_verification | verified | rejected | suspended
-              verificationDocument: null,
-              faculty: 'Đại học Nghệ An',
-              studentId: isDefaultAdmin ? 'ADMIN-NAU' : '',
-              rating: 5.0,
-              ratingCount: 0,
-              status: 'active',
-              phone: fbUser.phoneNumber || '',
+              // Admin whitelist guarantee
+              role: isDefaultAdmin ? 'admin' : (firestoreData.role || 'user'),
+              verificationStatus: isDefaultAdmin ? 'verified' : (firestoreData.verificationStatus || 'new'),
               isOnline: true,
-              lastActive: new Date().toISOString(),
-              joinedDate: new Date().toISOString()
+              lastActive: new Date().toISOString()
             };
-            await setDoc(userDocRef, newUser);
-            setCurrentUser(newUser);
+
+            // Non-blocking sync for admin privileges or online presence
+            if (isDefaultAdmin && (firestoreData.role !== 'admin' || firestoreData.verificationStatus !== 'verified')) {
+              setDoc(userDocRef, { role: 'admin', verificationStatus: 'verified' }, { merge: true }).catch(() => {});
+            }
+            setDoc(userDocRef, { isOnline: true, lastActive: finalUser.lastActive }, { merge: true }).catch(() => {});
+          } else {
+            // New user registration
+            await setDoc(userDocRef, baseUser).catch((e) => {
+              console.warn('Could not write initial user to Firestore:', e);
+            });
           }
 
-          // Real-time listener: sync changes made by admin (verification approval/rejection)
-          // This ensures user sees status change without refreshing the page
+          // Real-time listener for profile changes (e.g. verification approval)
           unsubscribeSnapshot = onSnapshot(userDocRef, (docSnap) => {
             if (docSnap.exists()) {
               const freshData = docSnap.data();
               setCurrentUser(prev => {
                 if (!prev || prev.id !== fbUser.uid) return prev;
-                return { ...prev, ...freshData, id: fbUser.uid };
+                return { 
+                  ...prev, 
+                  ...freshData, 
+                  id: fbUser.uid,
+                  role: isDefaultAdmin ? 'admin' : (freshData.role || prev.role)
+                };
               });
             }
           }, (err) => {
             console.warn('User document snapshot listener error:', err);
           });
 
-          // Heartbeat interval every 60s
-          if (heartbeatTimerRef.current) clearInterval(heartbeatTimerRef.current);
-          heartbeatTimerRef.current = setInterval(() => {
-            updateOnlinePresence(fbUser.uid, true);
-          }, 60000);
-
         } catch (err) {
-          console.error('Error fetching Firestore user:', err);
+          console.warn('Firestore user fetch error (using auth fallback):', err);
         }
+
+        // 4. GUARANTEE that currentUser is set, never null for authenticated user
+        setCurrentUser(finalUser);
+
+        // Heartbeat interval every 60s
+        if (heartbeatTimerRef.current) clearInterval(heartbeatTimerRef.current);
+        heartbeatTimerRef.current = setInterval(() => {
+          updateOnlinePresence(fbUser.uid, true);
+        }, 60000);
+
       } else {
         if (heartbeatTimerRef.current) clearInterval(heartbeatTimerRef.current);
         setCurrentUser(null);

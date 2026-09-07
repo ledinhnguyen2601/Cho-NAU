@@ -178,16 +178,16 @@ export const ChatPage = () => {
   });
 
   return (
-    <div className="h-[calc(100vh-140px)] min-h-[500px] bg-nau-surface dark:bg-nau-background rounded-3xl border border-nau-border dark:border-nau-border shadow-sm overflow-hidden flex animate-fade-in">
+    <div className="h-[calc(100dvh-175px)] sm:h-[calc(100vh-145px)] min-h-[450px] max-h-[820px] bg-nau-surface dark:bg-nau-background rounded-2xl sm:rounded-3xl border border-nau-border dark:border-nau-border shadow-sm overflow-hidden flex min-w-0 animate-fade-in">
       
       {/* Left Column: Conversations List */}
       <div
-        className={`w-full md:w-80 lg:w-96 border-r border-nau-border dark:border-nau-border flex flex-col shrink-0 ${
+        className={`w-full md:w-80 lg:w-96 border-r border-nau-border dark:border-nau-border flex flex-col shrink-0 min-w-0 ${
           activeConversation ? 'hidden md:flex' : 'flex'
         }`}
       >
         {/* Search & Actions Header (Phong cách Chợ Tốt) */}
-        <div className="p-3.5 border-b border-slate-100 dark:border-nau-border space-y-2.5">
+        <div className="p-3 sm:p-3.5 border-b border-slate-100 dark:border-nau-border space-y-2 shrink-0">
           <div className="flex items-center justify-between">
             <h2 className="text-sm font-bold text-nau-text dark:text-nau-text flex items-center gap-2">
               <MessageSquare className="w-4 h-4 text-nau-primary" />
@@ -271,7 +271,7 @@ export const ChatPage = () => {
 
       {/* Right Column: Chat Window */}
       <div
-        className={`flex-1 flex flex-col h-full ${
+        className={`flex-1 min-w-0 flex flex-col h-full ${
           !activeConversation ? 'hidden md:flex' : 'flex'
         }`}
       >
