@@ -11,7 +11,8 @@ import {
   markAllConversationsAsRead,
   deleteConversation,
   getMessagesOnce,
-  subscribeToMessages 
+  subscribeToMessages,
+  subscribeToUserConversations
 } from '../../services/chatService';
 import { ConversationList } from '../../components/chat/ConversationList';
 import { ChatWindow } from '../../components/chat/ChatWindow';
@@ -37,40 +38,40 @@ export const ChatPage = () => {
   const [filterTag, setFilterTag] = useState('all'); // 'all' | 'unread' | 'trading'
   const [isLoading, setIsLoading] = useState(true);
 
-  const loadConversations = async () => {
-    if (!currentUser) return;
-    try {
-      const list = await getUserConversations(currentUser.id);
+  // Subscribe in real-time to user's conversations
+  useEffect(() => {
+    if (!currentUser) {
+      setConversations([]);
+      setIsLoading(false);
+      return;
+    }
+
+    setIsLoading(true);
+    const unsubscribe = subscribeToUserConversations(currentUser.id, (list) => {
       setConversations(list);
+      setIsLoading(false);
 
       if (targetConvId) {
         const found = list.find(c => c.id === targetConvId);
         if (found) {
-          if (!activeConversation || activeConversation.id !== found.id) {
-            setActiveConversation(found);
-            markMessagesAsRead(found.id, currentUser.id);
-          }
+          setActiveConversation(prev => (prev?.id === found.id ? { ...found, ...prev } : found));
+          markMessagesAsRead(found.id, currentUser.id);
         } else {
-          const single = await getConversationById(targetConvId);
-          if (single) {
-            setActiveConversation(single);
-            setConversations(prev => [single, ...prev.filter(c => c.id !== single.id)]);
-          }
+          getConversationById(targetConvId).then(single => {
+            if (single) {
+              setActiveConversation(single);
+              setConversations(prev => [single, ...prev.filter(c => c.id !== single.id)]);
+            }
+          });
         }
       } else if (list.length > 0 && !activeConversation && window.innerWidth >= 768) {
         setActiveConversation(list[0]);
         markMessagesAsRead(list[0].id, currentUser.id);
       }
-    } catch (err) {
-      console.error('Load conversations error:', err);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    });
 
-  useEffect(() => {
-    loadConversations();
-  }, [currentUser, targetConvId]);
+    return () => unsubscribe();
+  }, [currentUser?.id, targetConvId]);
 
   // Real-time listener for the active conversation's messages
   useEffect(() => {
@@ -92,19 +93,25 @@ export const ChatPage = () => {
         setMessages(newMessages);
         setIsLoadingMessages(false);
         
-        // Also update the lastMessage in the conversations list visually
         if (newMessages.length > 0) {
           const lastMsg = newMessages[newMessages.length - 1];
-          setConversations(prevConvs => prevConvs.map(c => {
-            if (c.id === activeConversation.id) {
-              return {
-                ...c,
-                lastMessage: lastMsg.text,
-                lastMessageTime: lastMsg.timestamp?.toDate ? lastMsg.timestamp.toDate().toISOString() : new Date().toISOString()
-              };
-            }
-            return c;
-          }));
+          
+          // If active chat received an incoming message from the other person, mark as read immediately
+          if (lastMsg.senderId !== currentUser?.id) {
+            markMessagesAsRead(activeConversation.id, currentUser?.id);
+          }
+
+          // Auto push this conversation to the very top (index 0)
+          setConversations(prevConvs => {
+            const currentItem = prevConvs.find(c => c.id === activeConversation.id) || activeConversation;
+            const updatedItem = {
+              ...currentItem,
+              lastMessage: lastMsg.text,
+              lastMessageTime: lastMsg.timestamp?.toDate ? lastMsg.timestamp.toDate().toISOString() : new Date().toISOString(),
+              unreadCount: 0
+            };
+            return [updatedItem, ...prevConvs.filter(c => c.id !== activeConversation.id)];
+          });
         }
       });
     } else {
@@ -116,17 +123,33 @@ export const ChatPage = () => {
   }, [activeConversation?.id]);
 
   const handleSelectConversation = (conv) => {
-    // If clicking on the currently open conversation, keep it intact without reloading
-    if (activeConversation?.id === conv.id) return;
     setActiveConversation(conv);
+    // Optimistically zero out unreadCount on local state so badge disappears instantly
+    setConversations(prev => prev.map(c => c.id === conv.id ? { ...c, unreadCount: 0 } : c));
     markMessagesAsRead(conv.id, currentUser.id);
     setSearchParams({ convId: conv.id });
   };
 
   const handleSendMessage = async (text) => {
-    if (!activeConversation) return;
+    if (!activeConversation || !currentUser) return;
+    const cleanText = text.trim();
+    if (!cleanText) return;
+
+    // Optimistically reorder: move active conversation to index 0 immediately
+    setConversations(prev => {
+      const current = prev.find(c => c.id === activeConversation.id) || activeConversation;
+      const updated = {
+        ...current,
+        lastMessage: cleanText,
+        lastMessageTime: new Date().toISOString(),
+        lastSenderId: currentUser.id,
+        unreadCount: 0
+      };
+      return [updated, ...prev.filter(c => c.id !== activeConversation.id)];
+    });
+
     try {
-      await sendMessage(activeConversation.id, currentUser.id, text, currentUser.name);
+      await sendMessage(activeConversation.id, currentUser.id, cleanText, currentUser.name);
     } catch (err) {
       toast.error('Không thể gửi tin nhắn.');
     }

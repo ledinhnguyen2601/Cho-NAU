@@ -96,6 +96,35 @@ export const formatRelativeTime = (dateInput) => {
 };
 
 /**
+ * Format message time in chat (e.g., "13:40" if today, "Hôm qua, 13:40", or "13:40 - 24/08")
+ * Never leaves message without timestamp; falls back to current time for optimistic pending writes.
+ */
+export const formatMessageTime = (dateInput) => {
+  const date = parseDate(dateInput) || new Date();
+  
+  const hours = date.getHours().toString().padStart(2, '0');
+  const minutes = date.getMinutes().toString().padStart(2, '0');
+  const timeStr = `${hours}:${minutes}`;
+
+  const now = new Date();
+  const isToday = date.toDateString() === now.toDateString();
+  if (isToday) {
+    return timeStr;
+  }
+
+  const yesterday = new Date(now);
+  yesterday.setDate(yesterday.getDate() - 1);
+  const isYesterday = date.toDateString() === yesterday.toDateString();
+  if (isYesterday) {
+    return `Hôm qua, ${timeStr}`;
+  }
+
+  const day = date.getDate().toString().padStart(2, '0');
+  const month = (date.getMonth() + 1).toString().padStart(2, '0');
+  return `${timeStr} - ${day}/${month}`;
+};
+
+/**
  * Format full date & time (e.g., "14:30, 24/08/2024")
  * 100% crash-proof: handles Firestore Timestamps, strings, numbers, and null.
  */

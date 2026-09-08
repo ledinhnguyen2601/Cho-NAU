@@ -1,6 +1,10 @@
 // File: src/services/emailNotificationService.js
 import { db, doc, getDoc } from '../config/firebase';
 import { parseDate } from '../utils/formatters';
+import { getSystemSettings } from './adminService';
+
+// In-memory cooldown map to prevent email spamming within 5 minutes per conversation
+const emailCooldownMap = new Map();
 
 /**
  * Service to dispatch transactional email notifications to users
@@ -24,12 +28,13 @@ export const sendEmailNotification = async ({
   });
 
   try {
-    // Check global settings first
+    // 1. Check global settings from Firestore/Cache
     let globalConfig = null;
     try {
-      const raw = localStorage.getItem('nau_system_settings');
-      if (raw) globalConfig = JSON.parse(raw);
-    } catch (e) {}
+      globalConfig = await getSystemSettings();
+    } catch (e) {
+      console.warn('Could not load global settings for email:', e);
+    }
 
     if (globalConfig) {
       if (type === 'new_message' && globalConfig.notifyEmailOnNewMessage === false) return false;
@@ -41,7 +46,9 @@ export const sendEmailNotification = async ({
     const templateId = import.meta.env.VITE_EMAILJS_TEMPLATE_ID || globalConfig?.emailjsTemplateId;
     const publicKey = import.meta.env.VITE_EMAILJS_PUBLIC_KEY || globalConfig?.emailjsPublicKey;
 
-    // Direct dispatch via EmailJS REST API if keys are provided
+    let sendSuccess = false;
+
+    // 2. Direct dispatch via EmailJS REST API if keys are configured
     if (serviceId && templateId && publicKey) {
       try {
         const response = await fetch('https://api.emailjs.com/api/v1.0/email/send', {
@@ -66,7 +73,8 @@ export const sendEmailNotification = async ({
         });
 
         if (response.ok) {
-          console.log(`✅ [EMAIL SERVICE] Email sent successfully to ${toEmail}`);
+          sendSuccess = true;
+          console.log(`✅ [EMAIL SERVICE] Email dispatched successfully to ${toEmail}`);
         } else {
           const errDetail = await response.text();
           console.warn(`⚠️ [EMAIL SERVICE] EmailJS dispatch response (${response.status}):`, errDetail);
@@ -75,10 +83,10 @@ export const sendEmailNotification = async ({
         console.warn('⚠️ [EMAIL SERVICE] Network error dispatching EmailJS:', networkErr);
       }
     } else {
-      console.log(`ℹ️ [EMAIL SERVICE SIMULATION] Notification prepared for <${toEmail}>: "${subject}".`);
+      console.log(`ℹ️ [EMAIL SERVICE SIMULATION] Notification prepared for <${toEmail}>: "${subject}". EmailJS keys not configured yet in Admin Settings or .env.`);
     }
 
-    // Browser Notification fallback if user has allowed desktop notifications
+    // 3. Browser Notification fallback if user has allowed desktop notifications
     if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted' && document.hidden) {
       try {
         new Notification(`[Chợ NAU] Tin nhắn mới từ ${data.senderName || 'Người mua/bán'}`, {
@@ -88,16 +96,19 @@ export const sendEmailNotification = async ({
       } catch (notifErr) {}
     }
 
-    // Store recent email log in local session for audit trail
-    const logs = JSON.parse(sessionStorage.getItem('nau_email_logs') || '[]');
-    logs.unshift({
-      id: `email_${Date.now()}`,
-      to: toEmail,
-      subject,
-      type,
-      sentAt: new Date().toISOString()
-    });
-    sessionStorage.setItem('nau_email_logs', JSON.stringify(logs.slice(0, 20)));
+    // 4. Store recent email log in local session for audit trail
+    try {
+      const logs = JSON.parse(sessionStorage.getItem('nau_email_logs') || '[]');
+      logs.unshift({
+        id: `email_${Date.now()}`,
+        to: toEmail,
+        subject,
+        type,
+        status: sendSuccess ? 'sent' : (serviceId ? 'failed' : 'simulated'),
+        sentAt: new Date().toISOString()
+      });
+      sessionStorage.setItem('nau_email_logs', JSON.stringify(logs.slice(0, 30)));
+    } catch (e) {}
 
     return true;
   } catch (error) {
@@ -108,9 +119,18 @@ export const sendEmailNotification = async ({
 
 /**
  * Trigger offline message alert if receiver is not currently online
+ * Automatically called whenever a message is sent!
  */
 export const notifyOfflineReceiver = async ({ receiverId, senderName, messageText, conversationId }) => {
   if (!db || !receiverId) return;
+
+  // 5-minute spam prevention per receiver
+  const cooldownKey = `${receiverId}_${conversationId || 'default'}`;
+  const lastSent = emailCooldownMap.get(cooldownKey) || 0;
+  if (Date.now() - lastSent < 5 * 60 * 1000) {
+    console.log(`[EMAIL NOTIFICATION] Cooldown active for ${receiverId}. Skipping duplicate email.`);
+    return;
+  }
 
   try {
     const userDoc = await getDoc(doc(db, 'users', receiverId));
@@ -124,7 +144,10 @@ export const notifyOfflineReceiver = async ({ receiverId, senderName, messageTex
       const isOnline = Boolean(userData.isOnline) && (Date.now() - lastActiveTime) < 3 * 60 * 1000;
 
       if (!isOnline) {
-        console.log(`[EMAIL NOTIFICATION] Receiver ${userData.email} is OFFLINE (last active: ${userData.lastActive || 'chưa ghi nhận'}). Dispatching offline alert email.`);
+        console.log(`[EMAIL NOTIFICATION] Receiver ${userData.email} is OFFLINE (last active: ${userData.lastActive || 'chưa ghi nhận'}). Automatically dispatching offline alert email.`);
+        
+        emailCooldownMap.set(cooldownKey, Date.now());
+
         await sendEmailNotification({
           toEmail: userData.email,
           toName: userData.name,
@@ -144,4 +167,5 @@ export const notifyOfflineReceiver = async ({ receiverId, senderName, messageTex
     console.warn('Could not check offline status for email notification:', err);
   }
 };
+
 

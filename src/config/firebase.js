@@ -31,7 +31,9 @@ import {
   serverTimestamp,
   arrayUnion,
   arrayRemove,
-  getCountFromServer
+  getCountFromServer,
+  runTransaction,
+  writeBatch
 } from 'firebase/firestore';
 import { 
   getStorage, 
@@ -124,6 +126,8 @@ export {
   arrayUnion,
   arrayRemove,
   getCountFromServer,
+  runTransaction,
+  writeBatch,
   // Storage exports
   ref, 
   uploadBytes, 

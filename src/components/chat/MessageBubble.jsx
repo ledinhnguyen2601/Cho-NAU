@@ -1,6 +1,5 @@
-// File: src/components/chat/MessageBubble.jsx
 import React from 'react';
-import { formatRelativeTime } from '../../utils/formatters';
+import { formatMessageTime } from '../../utils/formatters';
 import { CheckCheck } from 'lucide-react';
 
 export const MessageBubble = ({ message, isMe }) => {
@@ -17,7 +16,7 @@ export const MessageBubble = ({ message, isMe }) => {
       </div>
 
       <div className={`flex items-center gap-1 mt-1 text-[10px] text-slate-400 px-1`}>
-        <span>{formatRelativeTime(message.timestamp)}</span>
+        <span>{formatMessageTime(message.timestamp)}</span>
         {isMe && (
           <CheckCheck className={`w-3 h-3 ${message.read ? 'text-nau-primary' : 'text-slate-400'}`} />
         )}

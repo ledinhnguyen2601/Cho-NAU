@@ -238,22 +238,85 @@ export const getConversationById = async (conversationId) => {
 };
 
 /**
+ * Subscribe in real-time to all conversations for a user
+ * Automatically sorted by latest activity descending (most recent conversation at top)
+ */
+export const subscribeToUserConversations = (userId, callback) => {
+  if (!isFirebaseConfigured || !db || !userId) {
+    callback([]);
+    return () => {};
+  }
+
+  try {
+    const buyerMap = new Map();
+    const sellerMap = new Map();
+
+    const emitSorted = () => {
+      const all = new Map([...buyerMap, ...sellerMap]);
+      const list = Array.from(all.values());
+      list.sort((a, b) => {
+        const timeA = a.updatedAt?.toMillis ? a.updatedAt.toMillis() : new Date(a.lastMessageTime || 0).getTime();
+        const timeB = b.updatedAt?.toMillis ? b.updatedAt.toMillis() : new Date(b.lastMessageTime || 0).getTime();
+        return timeB - timeA;
+      });
+      callback(list);
+    };
+
+    const qBuyer = query(collection(db, 'conversations'), where('buyerId', '==', userId));
+    const qSeller = query(collection(db, 'conversations'), where('sellerId', '==', userId));
+
+    const unsubBuyer = onSnapshot(qBuyer, (snap) => {
+      buyerMap.clear();
+      snap.docs.forEach(d => buyerMap.set(d.id, { id: d.id, ...d.data() }));
+      emitSorted();
+    }, (err) => {
+      console.warn('Buyer conversations snapshot error:', err);
+    });
+
+    const unsubSeller = onSnapshot(qSeller, (snap) => {
+      sellerMap.clear();
+      snap.docs.forEach(d => sellerMap.set(d.id, { id: d.id, ...d.data() }));
+      emitSorted();
+    }, (err) => {
+      console.warn('Seller conversations snapshot error:', err);
+    });
+
+    return () => {
+      unsubBuyer();
+      unsubSeller();
+    };
+  } catch (err) {
+    console.warn('subscribeToUserConversations error:', err);
+    callback([]);
+    return () => {};
+  }
+};
+
+/**
  * Mark messages in conversation as read
+ * Immediately resets unreadCount and marks messages read without crashing on compound indexes
  */
 export const markMessagesAsRead = async (conversationId, currentUserId) => {
   if (!isFirebaseConfigured || !db || !conversationId) return;
   
   try {
+    // 1. Immediately reset unread count on conversation document so badges disappear instantly
+    await updateDoc(doc(db, 'conversations', conversationId), { 
+      unreadCount: 0
+    });
+
+    // 2. Mark incoming unread messages as read using single equality filter
     const messagesRef = collection(db, `conversations/${conversationId}/messages`);
-    const q = query(messagesRef, where('read', '==', false), where('senderId', '!=', currentUserId));
+    const q = query(messagesRef, where('read', '==', false));
     
     const snapshot = await getDocs(q);
-    const updates = snapshot.docs.map(messageDoc => 
-      updateDoc(doc(db, `conversations/${conversationId}/messages`, messageDoc.id), { read: true })
-    );
+    const updates = snapshot.docs
+      .filter(docSnap => docSnap.data().senderId !== currentUserId)
+      .map(docSnap => updateDoc(docSnap.ref, { read: true }));
     
-    await Promise.all(updates);
-    await updateDoc(doc(db, 'conversations', conversationId), { unreadCount: 0 });
+    if (updates.length > 0) {
+      await Promise.all(updates);
+    }
   } catch (e) {
     console.warn('markMessagesAsRead error:', e);
   }

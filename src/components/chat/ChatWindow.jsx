@@ -101,7 +101,7 @@ export const ChatWindow = ({
     <div className="flex-1 min-w-0 flex flex-col h-full bg-nau-background/50 dark:bg-nau-background/50 overflow-hidden">
       
       {/* Top Header: Partner info + Product Quick Card + Delete Conversation */}
-      <div className="p-2.5 sm:p-3.5 bg-nau-surface dark:bg-nau-background border-b border-nau-border dark:border-nau-border shadow-xs shrink-0 min-w-0">
+      <div className="sticky top-0 z-20 p-2.5 sm:p-3.5 bg-nau-surface/95 dark:bg-nau-background/95 backdrop-blur-md border-b border-nau-border dark:border-nau-border shadow-xs shrink-0 min-w-0">
         <div className="flex items-center justify-between gap-2 min-w-0">
           
           {/* Left: Back button + User Info */}
@@ -109,10 +109,11 @@ export const ChatWindow = ({
             {onBack && (
               <button
                 onClick={onBack}
-                className="md:hidden p-1.5 -ml-1 rounded-lg text-nau-text-muted hover:bg-slate-100 dark:hover:bg-slate-800 shrink-0"
-                title="Quay lại danh sách"
+                className="md:hidden flex items-center justify-center p-2 -ml-1 rounded-xl bg-slate-100 dark:bg-slate-800 text-nau-primary dark:text-nau-primary hover:bg-slate-200 active:scale-95 transition-all shrink-0 min-w-[38px] min-h-[38px] shadow-xs"
+                title="Quay lại danh sách chat"
+                aria-label="Quay lại danh sách"
               >
-                <ArrowLeft className="w-5 h-5" />
+                <ArrowLeft className="w-5 h-5 stroke-[2.5]" />
               </button>
             )}
             <div className="min-w-0 flex-1">
@@ -197,7 +198,7 @@ export const ChatWindow = ({
       {/* Messages Scroll Area */}
       <div 
         ref={messagesContainerRef}
-        className="flex-1 min-w-0 overflow-y-auto p-3 sm:p-4 space-y-1 overscroll-contain"
+        className="flex-1 min-w-0 overflow-y-auto p-3 sm:p-4 space-y-1 overscroll-y-auto touch-pan-y"
       >
         {isLoadingMessages && messages.length === 0 ? (
           <div className="h-full flex flex-col items-center justify-center text-center p-6">

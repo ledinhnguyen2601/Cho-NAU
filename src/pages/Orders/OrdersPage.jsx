@@ -63,11 +63,11 @@ export const OrdersPage = () => {
 
   const handleStatusUpdate = async (orderId, newStatus) => {
     try {
-      await updateOrderStatus(orderId, newStatus);
+      await updateOrderStatus(orderId, newStatus, currentUser.id);
       toast.success('Cập nhật trạng thái đơn hàng thành công!');
       loadOrders();
     } catch (err) {
-      toast.error('Không thể cập nhật trạng thái đơn hàng.');
+      toast.error(err.message || 'Không thể cập nhật trạng thái đơn hàng.');
     }
   };
 

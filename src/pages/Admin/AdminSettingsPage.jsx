@@ -33,11 +33,16 @@ export const AdminSettingsPage = () => {
     autoExpireDays: 45,
     notifyEmailOnNewMessage: true,
     notifyEmailOnOrderUpdate: true,
-    notifyEmailOnVerification: true
+    notifyEmailOnVerification: true,
+    emailjsServiceId: '',
+    emailjsTemplateId: '',
+    emailjsPublicKey: ''
   });
 
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [isSendingTestEmail, setIsSendingTestEmail] = useState(false);
+  const [testEmailAddress, setTestEmailAddress] = useState('');
 
   useEffect(() => {
     const fetchSettings = async () => {
@@ -46,6 +51,7 @@ export const AdminSettingsPage = () => {
         const data = await getSystemSettings();
         if (data) {
           setSettings(prev => ({ ...prev, ...data }));
+          if (data.supportEmail) setTestEmailAddress(data.supportEmail);
         }
       } catch (e) {
         console.error('Error loading settings:', e);
@@ -61,11 +67,61 @@ export const AdminSettingsPage = () => {
     setIsSaving(true);
     try {
       await saveSystemSettings(settings);
-      toast.success('Đã lưu cấu hình hệ thống Chợ NAU thành công!');
+      toast.success('Đã lưu cấu hình hệ thống Chợ NAU thành công lên máy chủ!');
     } catch (err) {
       toast.error('Lỗi khi lưu cấu hình. Đã lưu tạm vào bộ nhớ trình duyệt.');
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handleSendTestEmail = async () => {
+    const targetEmail = testEmailAddress || settings.supportEmail;
+    if (!targetEmail) {
+      toast.warning('Vui lòng nhập địa chỉ email nhận thư kiểm tra.');
+      return;
+    }
+
+    const sId = settings.emailjsServiceId || import.meta.env.VITE_EMAILJS_SERVICE_ID;
+    const tId = settings.emailjsTemplateId || import.meta.env.VITE_EMAILJS_TEMPLATE_ID;
+    const pKey = settings.emailjsPublicKey || import.meta.env.VITE_EMAILJS_PUBLIC_KEY;
+
+    if (!sId || !tId || !pKey) {
+      toast.warning('Vui lòng nhập đầy đủ Service ID, Template ID và Public Key của EmailJS trước khi gửi thử.');
+      return;
+    }
+
+    setIsSendingTestEmail(true);
+    try {
+      const response = await fetch('https://api.emailjs.com/api/v1.0/email/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          service_id: sId,
+          template_id: tId,
+          user_id: pKey,
+          template_params: {
+            to_email: targetEmail,
+            to_name: 'Quản trị viên NAU',
+            subject: '[Chợ NAU] Thư kiểm tra kết nối hệ thống tự động',
+            sender_name: 'Hệ thống Chợ NAU',
+            message_text: 'Xin chào! Đây là email kiểm tra tự động từ Chợ NAU. Cấu hình EmailJS của bạn đã hoạt động chính xác 100%!',
+            action_url: window.location.origin,
+            platform_name: 'Chợ NAU - Sàn Đồ Cũ Sinh Viên NAU'
+          }
+        })
+      });
+
+      if (response.ok) {
+        toast.success(`Đã gửi email kiểm tra thành công tới ${targetEmail}!`);
+      } else {
+        const errorText = await response.text();
+        toast.error(`EmailJS báo lỗi (${response.status}): ${errorText}`);
+      }
+    } catch (err) {
+      toast.error('Không thể kết nối tới máy chủ EmailJS: ' + err.message);
+    } finally {
+      setIsSendingTestEmail(false);
     }
   };
 
@@ -250,6 +306,65 @@ export const AdminSettingsPage = () => {
                 className="w-5 h-5 rounded text-nau-primary focus:ring-nau-primary border-nau-border"
               />
             </label>
+          </div>
+
+          {/* EmailJS Credentials & Test Tool */}
+          <div className="pt-4 border-t border-slate-100 dark:border-nau-border space-y-4">
+            <h3 className="text-xs font-bold text-nau-text dark:text-nau-text uppercase tracking-wider">
+              Khóa Kết Nối Dịch Vụ Email Tự Động (EmailJS)
+            </h3>
+            <p className="text-[11px] text-nau-text-muted dark:text-nau-text-muted">
+              Đăng ký tài khoản miễn phí tại <a href="https://www.emailjs.com" target="_blank" rel="noreferrer" className="text-nau-primary underline font-bold">EmailJS.com</a> (miễn phí 200 email/tháng). Nhập các khóa dưới đây để kích hoạt gửi email tự động khi sinh viên offline:
+            </p>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <Input
+                label="EmailJS Service ID"
+                placeholder="service_xxxxx"
+                value={settings.emailjsServiceId || ''}
+                onChange={(e) => setSettings({ ...settings, emailjsServiceId: e.target.value.trim() })}
+              />
+
+              <Input
+                label="EmailJS Template ID"
+                placeholder="template_xxxxx"
+                value={settings.emailjsTemplateId || ''}
+                onChange={(e) => setSettings({ ...settings, emailjsTemplateId: e.target.value.trim() })}
+              />
+
+              <Input
+                label="EmailJS Public Key (User ID)"
+                placeholder="public_key_xxxxx"
+                value={settings.emailjsPublicKey || ''}
+                onChange={(e) => setSettings({ ...settings, emailjsPublicKey: e.target.value.trim() })}
+              />
+            </div>
+
+            {/* Test Email Box */}
+            <div className="p-4 rounded-2xl bg-slate-50 dark:bg-nau-surface/60 border border-slate-200 dark:border-nau-border flex flex-col sm:flex-row items-start sm:items-end justify-between gap-3">
+              <div className="w-full sm:w-80">
+                <Input
+                  label="Email nhận thử nghiệm"
+                  type="email"
+                  placeholder="admin@nau.edu.vn"
+                  value={testEmailAddress}
+                  onChange={(e) => setTestEmailAddress(e.target.value.trim())}
+                  helperText="Nhập email của bạn để kiểm tra tính năng gửi thư tự động"
+                />
+              </div>
+
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleSendTestEmail}
+                isLoading={isSendingTestEmail}
+                leftIcon={<Mail className="w-3.5 h-3.5 text-nau-primary" />}
+                className="w-full sm:w-auto shrink-0 mb-1"
+              >
+                Gửi Thử Email Kiểm Tra
+              </Button>
+            </div>
           </div>
 
         </div>

@@ -25,7 +25,7 @@ export const ConversationList = ({
       {conversations.map((conv) => {
         const isSelected = conv.id === activeId;
         const otherPartyName = conv.sellerId === currentUserId ? conv.buyerName : conv.sellerName;
-        const hasUnread = conv.lastSenderId && conv.lastSenderId !== currentUserId && (conv.unreadCount || 0) > 0;
+        const hasUnread = !isSelected && conv.lastSenderId && conv.lastSenderId !== currentUserId && (conv.unreadCount || 0) > 0;
 
         return (
           <div

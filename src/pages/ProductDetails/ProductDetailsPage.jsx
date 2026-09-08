@@ -103,6 +103,8 @@ export const ProductDetailsPage = () => {
   }
 
   const isSold = product.status === 'sold';
+  const isDelivering = product.status === 'delivering' || product.status === 'reserved';
+  const isUnavailable = isSold || isDelivering;
   const isMyProduct = currentUser?.id === product.sellerId;
 
   const handleToggleSave = async () => {
@@ -117,13 +119,19 @@ export const ProductDetailsPage = () => {
   };
 
   const handleAddToCart = () => {
-    if (isSold) return;
+    if (isUnavailable) {
+      toast.warning('Sản phẩm này hiện đang được giao dịch hoặc đã bán.');
+      return;
+    }
     addToCart(product, 1);
     toast.success(`Đã thêm "${product.title}" vào giỏ hàng!`);
   };
 
   const handleBuyNow = () => {
-    if (isSold) return;
+    if (isUnavailable) {
+      toast.warning('Sản phẩm này hiện đang được giao dịch hoặc đã bán.');
+      return;
+    }
     addToCart(product, 1);
     navigate('/cart');
   };
@@ -221,6 +229,11 @@ export const ProductDetailsPage = () => {
                 SẢN PHẨM ĐÃ BÁN
               </span>
             )}
+            {!isSold && isDelivering && (
+              <span className="px-2.5 py-1 rounded-lg bg-amber-600 text-white text-xs font-black uppercase">
+                ĐANG GIAO DỊCH
+              </span>
+            )}
           </div>
 
           {/* Title */}
@@ -261,7 +274,7 @@ export const ProductDetailsPage = () => {
           </div>
 
           {/* Action CTAs */}
-          {!isSold ? (
+          {!isUnavailable ? (
             <div className="space-y-3 pt-2">
               <Button
                 variant="primary"
@@ -290,6 +303,24 @@ export const ProductDetailsPage = () => {
                   Đặt Mua Ngay
                 </Button>
               </div>
+            </div>
+          ) : isDelivering ? (
+            <div className="p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 text-center space-y-3">
+              <p className="text-xs font-bold text-amber-800 dark:text-amber-200">
+                ⚠️ Sản phẩm đang trong quá trình giao dịch với người mua trước.
+              </p>
+              <p className="text-[11px] text-amber-700 dark:text-amber-300">
+                Bạn vẫn có thể nhắn tin hỏi người bán nếu cuộc giao dịch không thành công.
+              </p>
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full"
+                leftIcon={<MessageSquare className="w-4 h-4" />}
+                onClick={handleStartChat}
+              >
+                Nhắn tin trao đổi với người bán
+              </Button>
             </div>
           ) : (
             <div className="p-4 rounded-2xl bg-slate-100 dark:bg-nau-surface/80 text-center text-nau-text-muted dark:text-nau-text-muted text-xs font-semibold">

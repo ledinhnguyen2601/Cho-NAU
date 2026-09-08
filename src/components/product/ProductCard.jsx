@@ -25,6 +25,8 @@ export const ProductCard = ({ product }) => {
   const navigate = useNavigate();
 
   const isSold = product.status === 'sold';
+  const isDelivering = product.status === 'delivering' || product.status === 'reserved';
+  const isUnavailable = isSold || isDelivering;
   
   const [isSaved, setIsSaved] = useState(false);
 
@@ -56,7 +58,10 @@ export const ProductCard = ({ product }) => {
   const handleAddToCart = (e) => {
     e.preventDefault();
     e.stopPropagation();
-    if (isSold) return;
+    if (isUnavailable) {
+      toast.warning('Sản phẩm này hiện đang được giao dịch hoặc đã bán.');
+      return;
+    }
     addToCart(product, 1);
     toast.success(`Đã thêm "${product.title}" vào giỏ hàng!`);
   };
@@ -64,7 +69,7 @@ export const ProductCard = ({ product }) => {
   return (
     <div
       className={`group relative bg-nau-surface dark:bg-nau-background rounded-2xl border border-nau-border/90 dark:border-nau-border/90 overflow-hidden shadow-sm hover:shadow-card-hover transition-all duration-300 flex flex-col h-full ${
-        isSold ? 'opacity-75 grayscale-[20%]' : ''
+        isUnavailable ? 'opacity-75 grayscale-[20%]' : ''
       }`}
     >
       {/* Product Image Thumbnail */}
@@ -76,11 +81,18 @@ export const ProductCard = ({ product }) => {
           loading="lazy"
         />
 
-        {/* Sold Overlay */}
+        {/* Sold / Delivering Overlay */}
         {isSold && (
           <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-[2px] flex items-center justify-center">
             <span className="px-3.5 py-1.5 rounded-xl bg-slate-900/90 border border-white/20 text-white text-xs font-black tracking-wider uppercase shadow-lg">
               ĐÃ BÁN
+            </span>
+          </div>
+        )}
+        {!isSold && isDelivering && (
+          <div className="absolute inset-0 bg-slate-900/50 backdrop-blur-[1px] flex items-center justify-center">
+            <span className="px-3 py-1.5 rounded-xl bg-amber-600/90 border border-white/20 text-white text-xs font-black tracking-wider uppercase shadow-lg">
+              ĐANG GIAO DỊCH
             </span>
           </div>
         )}
@@ -177,7 +189,7 @@ export const ProductCard = ({ product }) => {
           </div>
 
           {/* Action Button: Quick Add to Cart */}
-          {!isSold ? (
+          {!isUnavailable ? (
             <button
               onClick={handleAddToCart}
               type="button"
@@ -188,7 +200,7 @@ export const ProductCard = ({ product }) => {
             </button>
           ) : (
             <span className="text-[9px] sm:text-[10px] font-bold text-slate-400 bg-slate-100 dark:bg-nau-surface px-1.5 py-0.5 rounded-md">
-              Đã bán
+              {isSold ? 'Đã bán' : 'Đang giao'}
             </span>
           )}
         </div>

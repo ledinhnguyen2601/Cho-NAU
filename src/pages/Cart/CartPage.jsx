@@ -85,7 +85,7 @@ export const CartPage = () => {
       toast.success('Đặt hàng thành công! Người bán sẽ nhận được thông báo để xác nhận giao dịch.');
       navigate('/orders');
     } catch (err) {
-      toast.error('Có lỗi xảy ra khi tạo đơn hàng.');
+      toast.error(err.message || 'Có lỗi xảy ra khi tạo đơn hàng.');
     } finally {
       setIsCheckingOut(false);
     }

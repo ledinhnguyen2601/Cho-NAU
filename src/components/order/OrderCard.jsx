@@ -116,6 +116,11 @@ export const OrderCard = ({
             Ghi chú: "{order.note}"
           </p>
         )}
+        {order.status === 'cancelled' && order.cancelledReason && (
+          <p className="text-nau-danger dark:text-red-400 text-[11px] font-semibold pl-5">
+            ⚠️ {order.cancelledReason}
+          </p>
+        )}
       </div>
 
       {/* Footer / Actions */}

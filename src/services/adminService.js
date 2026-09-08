@@ -362,7 +362,10 @@ const DEFAULT_SETTINGS = {
   autoExpireDays: 45,
   notifyEmailOnNewMessage: true,
   notifyEmailOnOrderUpdate: true,
-  notifyEmailOnVerification: true
+  notifyEmailOnVerification: true,
+  emailjsServiceId: '',
+  emailjsTemplateId: '',
+  emailjsPublicKey: ''
 };
 
 /**
