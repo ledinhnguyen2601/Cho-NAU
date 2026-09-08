@@ -298,6 +298,14 @@ export const Navbar = () => {
                           <ShieldCheck className="w-4 h-4 text-slate-400" />
                           <span>Xác thực thẻ SV / CCCD</span>
                         </Link>
+                        <Link
+                          to="/huong-dan"
+                          onClick={() => setIsUserMenuOpen(false)}
+                          className="flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-blue-600 dark:text-blue-400 font-medium"
+                        >
+                          <BookOpen className="w-4 h-4 text-blue-500" />
+                          <span>Quy chế & Tiêu chuẩn SV</span>
+                        </Link>
                       </div>
 
                       <div className="pt-1 border-t border-slate-100 dark:border-nau-border">
@@ -403,6 +411,14 @@ export const Navbar = () => {
                 className="p-2.5 rounded-xl bg-slate-100 dark:bg-nau-background text-center"
               >
                 Xác thực SV
+              </Link>
+              <Link
+                to="/huong-dan"
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="col-span-2 p-2.5 rounded-xl bg-blue-50/80 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900/50 text-blue-700 dark:text-blue-300 font-bold text-center flex items-center justify-center gap-1.5 shadow-xs"
+              >
+                <BookOpen className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                <span>Quy chế hoạt động & Hướng dẫn an toàn</span>
               </Link>
             </div>
           </div>

@@ -10,9 +10,12 @@
     content="Sàn điện tử online mua bán, trao đổi đồ cũ uy tín, an toàn dành riêng cho sinh viên Đại học Nghệ An (NAU)." />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="preload" as="image" href="/nau_logo_photo.png" />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
-    rel="stylesheet">
+  <link rel="preload" as="image" type="image/webp" href="/nau_logo_photo_sm.webp" />
+  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" media="print" onload="this.media='all'" />
+  <noscript>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" />
+  </noscript>
   <style>
     #initial-loading-screen {
       position: fixed;
@@ -79,7 +82,10 @@
   <div id="root">
     <!-- Pre-hydration Splash Loader: Chuẩn chuẩn HTML5, hiển thị tức thì trên cả Smartphone & Desktop -->
     <div id="initial-loading-screen">
-      <img src="/nau_logo_photo.png" alt="Logo Đại học Nghệ An (NAU)" width="190" height="107" class="nau-splash-logo" />
+      <picture>
+        <source srcset="/nau_logo_photo_sm.webp" type="image/webp">
+        <img src="/nau_logo_photo.png" alt="Logo Đại học Nghệ An (NAU)" width="190" height="107" class="nau-splash-logo" />
+      </picture>
       <div class="nau-splash-text">
         <span>Đang tải Chợ NAU...</span>
         <span class="nau-splash-dots">

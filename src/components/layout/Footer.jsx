@@ -87,25 +87,31 @@ export const Footer = () => {
             <h4 className="text-xs font-bold text-nau-text dark:text-nau-text uppercase tracking-wider mb-4">
               Hỗ trợ sinh viên
             </h4>
-            <ul className="space-y-2 text-xs">
+            <ul className="space-y-2.5 text-xs">
               <li>
-                <Link to="/verification" className="hover:text-nau-primary dark:hover:text-nau-primary transition-colors">
-                  Hướng dẫn xác thực Thẻ SV
+                <Link to="/huong-dan?tab=verification" className="hover:text-nau-primary dark:hover:text-nau-primary transition-colors flex items-center gap-1.5">
+                  <span>Hướng dẫn xác thực Thẻ SV</span>
                 </Link>
               </li>
               <li>
-                <Link to="/orders" className="hover:text-nau-primary dark:hover:text-nau-primary transition-colors">
-                  Quy trình giao dịch an toàn
+                <Link to="/huong-dan?tab=trading" className="hover:text-nau-primary dark:hover:text-nau-primary transition-colors flex items-center gap-1.5">
+                  <span>Quy trình giao dịch an toàn</span>
                 </Link>
               </li>
               <li>
-                <span className="text-slate-400">Chính sách chống lừa đảo (Zero-Fraud)</span>
+                <Link to="/huong-dan?tab=zero-fraud" className="hover:text-nau-red dark:hover:text-rose-400 text-slate-700 dark:text-slate-300 font-medium transition-colors flex items-center gap-1.5">
+                  <span>Chính sách chống lừa đảo (Zero-Fraud)</span>
+                </Link>
               </li>
               <li>
-                <span className="text-slate-400">Mẹo kiểm tra đồ điện tử cũ</span>
+                <Link to="/huong-dan?tab=rules" className="hover:text-nau-primary dark:hover:text-nau-primary transition-colors flex items-center gap-1.5">
+                  <span>Tiêu chuẩn cộng đồng & Quy chế</span>
+                </Link>
               </li>
               <li>
-                <span className="text-slate-400">Phí dịch vụ: Miễn phí 100% cho SV</span>
+                <Link to="/huong-dan?tab=tips" className="hover:text-nau-primary dark:hover:text-nau-primary transition-colors flex items-center gap-1.5">
+                  <span>Mẹo kiểm tra đồ điện tử cũ</span>
+                </Link>
               </li>
             </ul>
           </div>

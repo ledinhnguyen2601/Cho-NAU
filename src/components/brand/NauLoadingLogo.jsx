@@ -32,14 +32,19 @@ export const NauLoadingLogo = ({
         .nau-dot-3 { animation: nau-dot-bounce 1.4s infinite ease-in-out 0.4s both; }
       `}</style>
 
-      {/* Hình tĩnh logo chuẩn xóa nền từ ảnh gốc thực tế */}
+      {/* Hình tĩnh logo chuẩn xóa nền từ ảnh gốc thực tế (Tối ưu WebP siêu nhẹ cho Smartphone) */}
       <div className={`${currentSize.imgWidth} flex items-center justify-center`}>
-        <img
-          src="/nau_logo_photo.png"
-          alt="Logo Đại học Nghệ An (NAU)"
-          className="w-full h-auto object-contain drop-shadow-sm"
-          loading="eager"
-        />
+        <picture className="w-full flex items-center justify-center">
+          <source srcSet="/nau_logo_photo_sm.webp" type="image/webp" />
+          <img
+            src="/nau_logo_photo.png"
+            alt="Logo Đại học Nghệ An (NAU)"
+            className="w-full h-auto object-contain drop-shadow-sm"
+            loading="eager"
+            width="224"
+            height="126"
+          />
+        </picture>
       </div>
 
       {/* Dòng chữ đang tải kèm 3 dấu chấm chuyển động tuần tự phía dưới */}

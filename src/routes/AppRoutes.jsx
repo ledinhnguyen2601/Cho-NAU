@@ -15,6 +15,7 @@ const ProductDetailsPage = lazy(() => import('../pages/ProductDetails/ProductDet
 const CreateProductPage = lazy(() => import('../pages/CreateProduct/CreateProductPage').then(m => ({ default: m.CreateProductPage })));
 const LoginPage = lazy(() => import('../pages/Login/LoginPage').then(m => ({ default: m.LoginPage })));
 const VerificationPage = lazy(() => import('../pages/Verification/VerificationPage').then(m => ({ default: m.VerificationPage })));
+const CommunityRulesPage = lazy(() => import('../pages/Guide/CommunityRulesPage').then(m => ({ default: m.CommunityRulesPage })));
 const ChatPage = lazy(() => import('../pages/Chat/ChatPage').then(m => ({ default: m.ChatPage })));
 const CartPage = lazy(() => import('../pages/Cart/CartPage').then(m => ({ default: m.CartPage })));
 const OrdersPage = lazy(() => import('../pages/Orders/OrdersPage').then(m => ({ default: m.OrdersPage })));
@@ -51,6 +52,8 @@ export const AppRoutes = () => {
           <Route index element={<HomePage />} />
           <Route path="product/:id" element={<ProductDetailsPage />} />
           <Route path="login" element={<LoginPage />} />
+          <Route path="huong-dan" element={<CommunityRulesPage />} />
+          <Route path="quy-che" element={<CommunityRulesPage />} />
           
           {/* Protected routes */}
           <Route element={<ProtectedRoute />}>
