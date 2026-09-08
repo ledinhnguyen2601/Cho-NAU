@@ -10,13 +10,66 @@
     content="Sàn điện tử online mua bán, trao đổi đồ cũ uy tín, an toàn dành riêng cho sinh viên Đại học Nghệ An (NAU)." />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preload" as="image" href="/nau_logo_photo.png" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
     rel="stylesheet">
 </head>
 
 <body
   class="bg-nau-background text-nau-text dark:bg-nau-background dark:text-nau-text transition-colors duration-200 antialiased min-h-screen">
-  <div id="root"></div>
+  <div id="root">
+    <!-- Pre-hydration Splash Loader: Hiển thị tức thì trên cả Smartphone & Desktop khi tải trang, xuất hiện trong PageSpeed test -->
+    <div id="initial-loading-screen" style="position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; background-color: #ffffff; z-index: 99999; font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;">
+      <style>
+        @keyframes nau-init-pulse {
+          0%, 100% { transform: scale(1); opacity: 1; }
+          50% { transform: scale(0.97); opacity: 0.88; }
+        }
+        @keyframes nau-init-bounce {
+          0%, 80%, 100% { transform: scale(0.35); opacity: 0.25; }
+          40% { transform: scale(1.15); opacity: 1; }
+        }
+        .nau-splash-logo {
+          width: 190px;
+          max-width: 65vw;
+          height: auto;
+          object-fit: contain;
+          animation: nau-init-pulse 2s ease-in-out infinite;
+        }
+        .nau-splash-text {
+          margin-top: 14px;
+          font-size: 13px;
+          font-weight: 600;
+          color: #475569;
+          display: flex;
+          align-items: center;
+          gap: 6px;
+        }
+        .nau-splash-dot {
+          width: 6px;
+          height: 6px;
+          border-radius: 50%;
+          display: inline-block;
+        }
+        .nau-splash-dot-1 { background-color: #c92a2a; animation: nau-init-bounce 1.4s infinite ease-in-out both; }
+        .nau-splash-dot-2 { background-color: #1e3a8a; animation: nau-init-bounce 1.4s infinite ease-in-out 0.2s both; }
+        .nau-splash-dot-3 { background-color: #c92a2a; animation: nau-init-bounce 1.4s infinite ease-in-out 0.4s both; }
+        @media (prefers-color-scheme: dark) {
+          #initial-loading-screen { background-color: #0f172a !important; }
+          .nau-splash-text { color: #94a3b8 !important; }
+        }
+      </style>
+      <img src="/nau_logo_photo.png" alt="Logo Đại học Nghệ An (NAU)" class="nau-splash-logo" />
+      <div class="nau-splash-text">
+        <span>Đang tải Chợ NAU...</span>
+        <span style="display: inline-flex; gap: 4px; margin-left: 2px;">
+          <span class="nau-splash-dot nau-splash-dot-1"></span>
+          <span class="nau-splash-dot nau-splash-dot-2"></span>
+          <span class="nau-splash-dot nau-splash-dot-3"></span>
+        </span>
+      </div>
+    </div>
+  </div>
   <script type="module" src="/src/main.jsx"></script>
 </body>
 
