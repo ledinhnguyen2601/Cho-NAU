@@ -127,7 +127,10 @@ export const LoginPage = () => {
             ℹ️ Lưu ý về quyền đăng bán & chat:
           </p>
           <p>
-            Bạn có thể đăng nhập bằng bất kỳ email/tài khoản nào. Tuy nhiên để đăng tin bán và chat giao dịch, bạn sẽ cần gửi ảnh Thẻ sinh viên NAU hoặc CCCD để xác thực.
+            • Bạn có thể đăng nhập bằng bất kỳ tài khoản Gmail/Google nào. Để đăng tin bán và chat giao dịch, bạn sẽ gửi ảnh Thẻ sinh viên NAU hoặc CCCD để xác thực.
+          </p>
+          <p>
+            • Khi bạn offline, tin nhắn mua bán sẽ được tự động gửi về Gmail. Bạn hãy lưu ý kiểm tra mục <strong>Thư rác/Quảng cáo</strong> lần đầu và bấm <em>"Không phải thư rác"</em> để không bỏ lỡ khách hàng nhé!
           </p>
         </div>
 

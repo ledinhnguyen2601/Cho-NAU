@@ -21,7 +21,9 @@ import {
   Search, 
   ArrowLeft,
   CheckCheck,
-  Trash2
+  Trash2,
+  Mail,
+  X
 } from 'lucide-react';
 
 export const ChatPage = () => {
@@ -37,6 +39,7 @@ export const ChatPage = () => {
   const [searchFilter, setSearchFilter] = useState('');
   const [filterTag, setFilterTag] = useState('all'); // 'all' | 'unread' | 'trading'
   const [isLoading, setIsLoading] = useState(true);
+  const [showEmailTip, setShowEmailTip] = useState(() => !localStorage.getItem('nau_hide_email_tip'));
 
   // Subscribe in real-time to user's conversations
   useEffect(() => {
@@ -296,6 +299,27 @@ export const ChatPage = () => {
             </button>
           </div>
         </div>
+
+        {/* Offline Email Tip Banner */}
+        {showEmailTip && (
+          <div className="mx-3 my-2 p-2.5 rounded-xl bg-blue-50/90 dark:bg-blue-950/40 border border-blue-200/80 dark:border-blue-900/50 flex items-start gap-2 text-[11px] text-blue-950 dark:text-blue-200 shrink-0 shadow-xs">
+            <Mail className="w-4 h-4 text-nau-blue dark:text-blue-400 shrink-0 mt-0.5" />
+            <div className="flex-1 leading-snug">
+              <span className="font-bold">Mẹo nhận tin khi Offline:</span> Tin nhắn mới sẽ tự báo về Gmail của bạn. Hãy kiểm tra mục <span className="font-semibold underline">Thư rác / Quảng cáo</span> lần đầu và bấm <em>"Không phải thư rác"</em> để không bỏ lỡ khách nhé!
+            </div>
+            <button 
+              type="button" 
+              onClick={() => {
+                setShowEmailTip(false);
+                localStorage.setItem('nau_hide_email_tip', 'true');
+              }}
+              className="text-blue-400 hover:text-blue-700 dark:hover:text-blue-200 p-0.5 -mr-1 -mt-0.5 cursor-pointer"
+              title="Đóng mẹo này"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        )}
 
         {/* Conversation List */}
         <div className="flex-1 overflow-y-auto">
