@@ -102,10 +102,16 @@ export const AdminSettingsPage = () => {
           user_id: pKey,
           template_params: {
             to_email: targetEmail,
+            email: targetEmail,
+            user_email: targetEmail,
+            recipient: targetEmail,
+            reply_to: targetEmail,
             to_name: 'Quản trị viên NAU',
+            name: 'Quản trị viên NAU',
             subject: '[Chợ NAU] Thư kiểm tra kết nối hệ thống tự động',
             sender_name: 'Hệ thống Chợ NAU',
             message_text: 'Xin chào! Đây là email kiểm tra tự động từ Chợ NAU. Cấu hình EmailJS của bạn đã hoạt động chính xác 100%!',
+            message: 'Xin chào! Đây là email kiểm tra tự động từ Chợ NAU. Cấu hình EmailJS của bạn đã hoạt động chính xác 100%!',
             action_url: window.location.origin,
             platform_name: 'Chợ NAU - Sàn Đồ Cũ Sinh Viên NAU'
           }
@@ -116,7 +122,11 @@ export const AdminSettingsPage = () => {
         toast.success(`Đã gửi email kiểm tra thành công tới ${targetEmail}!`);
       } else {
         const errorText = await response.text();
-        toast.error(`EmailJS báo lỗi (${response.status}): ${errorText}`);
+        if (errorText.includes('recipients address is empty')) {
+          toast.error('Lỗi EmailJS (422): Bạn chưa điền {{to_email}} vào ô "To Email" trong mẫu Template trên trang EmailJS.com!');
+        } else {
+          toast.error(`EmailJS báo lỗi (${response.status}): ${errorText}`);
+        }
       }
     } catch (err) {
       toast.error('Không thể kết nối tới máy chủ EmailJS: ' + err.message);

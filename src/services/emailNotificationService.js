@@ -62,10 +62,16 @@ export const sendEmailNotification = async ({
             user_id: publicKey,
             template_params: {
               to_email: toEmail,
+              email: toEmail,
+              user_email: toEmail,
+              recipient: toEmail,
+              reply_to: toEmail,
               to_name: toName || 'Thành viên NAU',
+              name: toName || 'Thành viên NAU',
               subject: subject,
               sender_name: data.senderName || 'Hệ thống Chợ NAU',
               message_text: data.messageText || '',
+              message: data.messageText || '',
               action_url: data.actionUrl || window.location.origin,
               platform_name: 'Chợ NAU - Sàn Đồ Cũ Sinh Viên NAU'
             }
