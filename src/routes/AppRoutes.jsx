@@ -9,8 +9,10 @@ import { AdminLayout } from '../components/layout/AdminLayout';
 import { ProtectedRoute } from './ProtectedRoute';
 import { AdminRoute } from './AdminRoute';
 
+// Main Landing Page (Eagerly loaded for optimal LCP/FCP)
+import { HomePage } from '../pages/Home/HomePage';
+
 // Lazy-loaded Marketplace Pages
-const HomePage = lazy(() => import('../pages/Home/HomePage').then(m => ({ default: m.HomePage })));
 const ProductDetailsPage = lazy(() => import('../pages/ProductDetails/ProductDetailsPage').then(m => ({ default: m.ProductDetailsPage })));
 const CreateProductPage = lazy(() => import('../pages/CreateProduct/CreateProductPage').then(m => ({ default: m.CreateProductPage })));
 const LoginPage = lazy(() => import('../pages/Login/LoginPage').then(m => ({ default: m.LoginPage })));

@@ -145,3 +145,13 @@
 .glow-emerald {
   box-shadow: 0 0 15px -3px rgba(16, 185, 129, 0.35);
 }
+
+/* Nau Loading Dots */
+@keyframes nau-dot-bounce {
+  0%, 80%, 100% { transform: scale(0.4); opacity: 0.3; }
+  40% { transform: scale(1.15); opacity: 1; }
+}
+.nau-dot-1 { animation: nau-dot-bounce 1.4s infinite ease-in-out both; }
+.nau-dot-2 { animation: nau-dot-bounce 1.4s infinite ease-in-out 0.2s both; }
+.nau-dot-3 { animation: nau-dot-bounce 1.4s infinite ease-in-out 0.4s both; }
+

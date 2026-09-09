@@ -100,17 +100,17 @@ export const MobileBottomNav = () => {
           )}
         </NavLink>
 
-        {/* 3. Nút Đăng tin trung tâm nổi bật phong cách Chợ Tốt (Vàng/Cam tròn) */}
+        {/* 3. Nút Đăng tin trung tâm nổi bật chuẩn NAU Red */}
         <div className="flex flex-col items-center justify-center flex-1 -mt-4">
           <button
             type="button"
             onClick={handlePostListingClick}
-            className="w-12 h-12 rounded-full bg-gradient-to-tr from-amber-500 to-yellow-400 hover:from-amber-600 hover:to-yellow-500 text-slate-900 flex items-center justify-center shadow-lg shadow-amber-400/40 active:scale-90 transition-transform ring-4 ring-white dark:ring-slate-900 cursor-pointer"
+            className="w-12 h-12 rounded-full bg-gradient-to-tr from-nau-red to-red-600 hover:from-nau-red-hover hover:to-red-700 text-white flex items-center justify-center shadow-lg shadow-nau-red/35 active:scale-90 transition-transform ring-4 ring-white dark:ring-slate-900 cursor-pointer"
             title="Đăng tin bán mới"
           >
             <Plus className="w-6 h-6 stroke-[3]" />
           </button>
-          <span className="text-[10px] font-black text-amber-600 dark:text-amber-400 mt-0.5">
+          <span className="text-[10px] font-black text-nau-red dark:text-nau-red-hover mt-0.5">
             Đăng tin
           </span>
         </div>

@@ -22,10 +22,13 @@ export const NauBrandLogo = ({
   return (
     <div className={`inline-flex items-center select-none ${className}`}>
       <img
-        src="/nau_logo_photo.png"
+        src="/nau_logo_photo_sm.webp"
         alt="Logo Đại học Nghệ An (NAU)"
         className={`${heightClass} w-auto object-contain ${showShadow ? 'drop-shadow-md' : ''}`}
         loading="eager"
+        decoding="async"
+        width="160"
+        height="90"
       />
     </div>
   );

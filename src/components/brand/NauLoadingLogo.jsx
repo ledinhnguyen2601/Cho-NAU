@@ -21,30 +21,17 @@ export const NauLoadingLogo = ({
 
   const content = (
     <div className={`flex flex-col items-center justify-center select-none text-center ${className}`}>
-      {/* CSS cho 3 dấu chấm chuyển động tuần tự */}
-      <style>{`
-        @keyframes nau-dot-bounce {
-          0%, 80%, 100% { transform: scale(0.4); opacity: 0.3; }
-          40% { transform: scale(1.15); opacity: 1; }
-        }
-        .nau-dot-1 { animation: nau-dot-bounce 1.4s infinite ease-in-out both; }
-        .nau-dot-2 { animation: nau-dot-bounce 1.4s infinite ease-in-out 0.2s both; }
-        .nau-dot-3 { animation: nau-dot-bounce 1.4s infinite ease-in-out 0.4s both; }
-      `}</style>
-
-      {/* Hình tĩnh logo chuẩn xóa nền từ ảnh gốc thực tế (Tối ưu WebP siêu nhẹ cho Smartphone) */}
+      {/* Hình tĩnh logo chuẩn xóa nền từ ảnh gốc thực tế (WebP siêu nhẹ) */}
       <div className={`${currentSize.imgWidth} flex items-center justify-center`}>
-        <picture className="w-full flex items-center justify-center">
-          <source srcSet="/nau_logo_photo_sm.webp" type="image/webp" />
-          <img
-            src="/nau_logo_photo.png"
-            alt="Logo Đại học Nghệ An (NAU)"
-            className="w-full h-auto object-contain drop-shadow-sm"
-            loading="eager"
-            width="224"
-            height="126"
-          />
-        </picture>
+        <img
+          src="/nau_logo_photo_sm.webp"
+          alt="Logo Đại học Nghệ An (NAU)"
+          className="w-full h-auto object-contain drop-shadow-sm"
+          loading="eager"
+          decoding="async"
+          width="224"
+          height="126"
+        />
       </div>
 
       {/* Dòng chữ đang tải kèm 3 dấu chấm chuyển động tuần tự phía dưới */}

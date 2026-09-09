@@ -22,7 +22,8 @@ import {
   BadgeCheck,
   Building2,
   Tag,
-  Heart
+  Heart,
+  BookOpen
 } from 'lucide-react';
 
 export const Navbar = () => {

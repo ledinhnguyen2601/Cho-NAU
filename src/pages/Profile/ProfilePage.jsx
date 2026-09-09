@@ -162,7 +162,7 @@ export const ProfilePage = () => {
             <div className="shrink-0 flex flex-wrap gap-2">
               <Link
                 to="/manage-listings"
-                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-amber-400 hover:bg-amber-500 text-slate-950 text-xs font-black shadow-xs transition-all"
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-nau-red hover:bg-nau-red-hover text-white text-xs font-bold shadow-xs transition-all"
               >
                 <Tag className="w-3.5 h-3.5" />
                 <span>Quản lý tin ({products.length})</span>
@@ -204,19 +204,19 @@ export const ProfilePage = () => {
             </div>
 
             {/* Reputation Points / Coins card */}
-            <div className="bg-amber-50/70 dark:bg-amber-950/20 p-3.5 rounded-2xl border border-amber-200/60 dark:border-amber-900/40 flex items-center justify-between">
+            <div className="bg-blue-50/70 dark:bg-blue-950/20 p-3.5 rounded-2xl border border-blue-200/60 dark:border-blue-900/40 flex items-center justify-between">
               <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-xl bg-amber-400 text-slate-950 flex items-center justify-center font-black">
+                <div className="w-8 h-8 rounded-xl bg-nau-blue text-white flex items-center justify-center font-black">
                   <Coins className="w-4 h-4" />
                 </div>
                 <div>
-                  <span className="text-[10px] text-amber-700 dark:text-amber-400 font-bold uppercase tracking-wider block">Điểm Uy Tín Trao Đổi</span>
-                  <span className="font-black text-amber-900 dark:text-amber-200 text-sm">
+                  <span className="text-[10px] text-nau-blue dark:text-blue-400 font-bold uppercase tracking-wider block">Điểm Uy Tín Trao Đổi</span>
+                  <span className="font-black text-blue-950 dark:text-blue-200 text-sm">
                     {currentUser?.ratingCount > 0 ? `${Math.round((currentUser?.rating || 0) * 20)} Điểm` : '0 Điểm (Tài khoản mới)'}
                   </span>
                 </div>
               </div>
-              <span className="text-[10px] font-bold px-2 py-1 rounded-lg bg-white/80 dark:bg-slate-900/80 text-amber-700 dark:text-amber-300">
+              <span className="text-[10px] font-bold px-2 py-1 rounded-lg bg-white/80 dark:bg-slate-900/80 text-nau-blue dark:text-blue-300">
                 {currentUser?.ratingCount > 0 ? 'Uy tín' : 'Mới tham gia'}
               </span>
             </div>
@@ -234,13 +234,13 @@ export const ProfilePage = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 text-xs">
             <Link
               to="/manage-listings"
-              className="flex items-center justify-between p-3 rounded-2xl bg-slate-50 dark:bg-slate-900/60 hover:bg-amber-50 dark:hover:bg-slate-800 transition-colors border border-slate-100 dark:border-slate-800"
+              className="flex items-center justify-between p-3 rounded-2xl bg-slate-50 dark:bg-slate-900/60 hover:bg-red-50/50 dark:hover:bg-slate-800 transition-colors border border-slate-100 dark:border-slate-800"
             >
               <div className="flex items-center gap-2.5 font-bold">
-                <Tag className="w-4 h-4 text-amber-500" />
+                <Tag className="w-4 h-4 text-nau-red" />
                 <span>Quản lý tin đăng</span>
               </div>
-              <span className="text-[10px] font-bold text-amber-600 dark:text-amber-400 bg-amber-100/70 dark:bg-amber-950 px-2 py-0.5 rounded-full">
+              <span className="text-[10px] font-bold text-nau-red dark:text-red-400 bg-red-100/70 dark:bg-red-950 px-2 py-0.5 rounded-full">
                 {products.length} tin
               </span>
             </Link>

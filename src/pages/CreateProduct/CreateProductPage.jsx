@@ -255,19 +255,19 @@ export const CreateProductPage = () => {
               <label className="block text-xs font-black text-nau-text dark:text-nau-text uppercase tracking-wider">
                 Hình ảnh sản phẩm <span className="text-nau-red">* (Tối đa 6 ảnh)</span>
               </label>
-              <span className="text-xs font-bold text-amber-600 dark:text-amber-400">{form.images.length}/6 ảnh</span>
+              <span className="text-xs font-bold text-nau-blue dark:text-blue-400">{form.images.length}/6 ảnh</span>
             </div>
 
             {/* Upload Zone */}
             {form.images.length < 6 && (
-              <label className="block bg-amber-50/70 hover:bg-amber-100/70 dark:bg-amber-950/20 dark:hover:bg-amber-950/30 border-2 border-dashed border-amber-300 dark:border-amber-700/60 rounded-3xl p-6 sm:p-8 text-center cursor-pointer transition-all group shadow-inner">
-                <div className="w-14 h-14 rounded-2xl bg-amber-400 text-slate-950 flex items-center justify-center mx-auto shadow-md group-hover:scale-105 transition-transform">
+              <label className="block bg-blue-50/40 hover:bg-blue-100/40 dark:bg-blue-950/20 dark:hover:bg-blue-950/30 border-2 border-dashed border-blue-300 dark:border-blue-700/60 rounded-3xl p-6 sm:p-8 text-center cursor-pointer transition-all group shadow-inner">
+                <div className="w-14 h-14 rounded-2xl bg-nau-blue text-white flex items-center justify-center mx-auto shadow-md group-hover:scale-105 transition-transform">
                   <Upload className="w-7 h-7 stroke-[2.5]" />
                 </div>
                 <p className="text-sm font-black text-slate-800 dark:text-slate-100 mt-2.5">
                   Thêm ảnh sản phẩm
                 </p>
-                <p className="text-xs text-amber-800 dark:text-amber-300 mt-0.5 font-medium">
+                <p className="text-xs text-nau-text-secondary dark:text-slate-400 mt-0.5 font-medium">
                   Chụp góc rõ nét để sinh viên khác dễ dàng liên hệ mua
                 </p>
                 <input
@@ -285,7 +285,7 @@ export const CreateProductPage = () => {
             {form.images.length > 0 && (
               <div className="grid grid-cols-3 sm:grid-cols-6 gap-2.5 pt-1">
                 {form.images.map((img, idx) => (
-                  <div key={idx} className="relative aspect-square rounded-2xl overflow-hidden border-2 border-amber-400 dark:border-amber-500 group shadow-xs">
+                  <div key={idx} className="relative aspect-square rounded-2xl overflow-hidden border-2 border-nau-blue/50 dark:border-blue-500 group shadow-xs">
                     <img src={img} alt="Product preview" className="w-full h-full object-cover" />
                     <button
                       type="button"
@@ -308,10 +308,10 @@ export const CreateProductPage = () => {
                 <div className="w-full bg-slate-100 dark:bg-nau-surface h-2 rounded-full overflow-hidden">
                   <div
                     style={{ width: `${uploadProgress}%` }}
-                    className="bg-amber-400 h-full transition-all duration-300"
+                    className="bg-nau-blue h-full transition-all duration-300"
                   />
                 </div>
-                <p className="text-[11px] text-amber-600 font-bold text-center">
+                <p className="text-[11px] text-nau-blue dark:text-blue-400 font-bold text-center">
                   Đang xử lý tải ảnh lên ({uploadProgress}%)...
                 </p>
               </div>
@@ -521,11 +521,11 @@ export const CreateProductPage = () => {
             <button
               type="submit"
               disabled={isSubmitting}
-              className="order-1 sm:order-2 w-full sm:w-auto px-8 py-3.5 bg-gradient-to-r from-amber-400 to-yellow-400 hover:from-amber-500 hover:to-yellow-500 text-slate-950 font-black text-sm rounded-2xl shadow-lg shadow-amber-400/30 active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+              className="order-1 sm:order-2 w-full sm:w-auto px-8 py-3.5 bg-nau-red hover:bg-nau-red-hover text-white font-bold text-sm rounded-2xl shadow-lg shadow-nau-red/25 active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
             >
               {isSubmitting ? (
                 <>
-                  <div className="w-4 h-4 border-2 border-slate-950 border-t-transparent rounded-full animate-spin" />
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                   <span>Đang tải tin đăng...</span>
                 </>
               ) : (

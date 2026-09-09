@@ -143,7 +143,7 @@ export const ManageListingsPage = () => {
             <img
               src={currentUser?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150'}
               alt={currentUser?.name}
-              className="w-13 h-13 sm:w-16 sm:h-16 rounded-full object-cover border-2 border-amber-400 shadow-sm"
+              className="w-13 h-13 sm:w-16 sm:h-16 rounded-full object-cover border-2 border-nau-red shadow-sm"
             />
             <span className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 rounded-full ring-2 ring-white dark:ring-slate-900" />
           </div>
@@ -169,7 +169,7 @@ export const ManageListingsPage = () => {
         {/* Post new listing action */}
         <Link
           to="/create-product"
-          className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-600 hover:to-yellow-500 text-slate-950 text-xs font-black rounded-xl shadow-md shadow-amber-500/20 active:scale-95 transition-all"
+          className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-nau-red hover:bg-nau-red-hover text-white text-xs font-bold rounded-xl shadow-md shadow-nau-red/25 active:scale-95 transition-all"
         >
           <PlusCircle className="w-4 h-4" />
           <span>ĐĂNG TIN MỚI</span>
@@ -183,7 +183,7 @@ export const ManageListingsPage = () => {
           placeholder="Tìm tin đăng của bạn theo tên sản phẩm..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full pl-10 pr-4 py-2.5 text-xs sm:text-sm rounded-2xl border border-nau-border dark:border-nau-border bg-nau-surface dark:bg-nau-background text-nau-text dark:text-nau-text placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-400/40 focus:border-amber-500 shadow-xs"
+          className="w-full pl-10 pr-4 py-2.5 text-xs sm:text-sm rounded-2xl border border-nau-border dark:border-nau-border bg-nau-surface dark:bg-nau-background text-nau-text dark:text-nau-text placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-nau-red/30 focus:border-nau-red shadow-xs"
         />
         <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
       </div>
@@ -195,13 +195,13 @@ export const ManageListingsPage = () => {
           onClick={() => setActiveTab('active')}
           className={`px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all flex items-center gap-1.5 cursor-pointer ${
             activeTab === 'active'
-              ? 'bg-amber-400 text-slate-950 shadow-sm'
+              ? 'bg-nau-red text-white shadow-sm'
               : 'bg-nau-surface dark:bg-nau-background text-nau-text-secondary dark:text-nau-text-muted hover:bg-slate-100 dark:hover:bg-slate-800'
           }`}
         >
           <span>ĐANG HIỂN THỊ</span>
           <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-black ${
-            activeTab === 'active' ? 'bg-slate-950 text-white' : 'bg-slate-200 dark:bg-slate-700'
+            activeTab === 'active' ? 'bg-white/20 text-white' : 'bg-slate-200 dark:bg-slate-700'
           }`}>
             {activeProducts.length}
           </span>
@@ -212,13 +212,13 @@ export const ManageListingsPage = () => {
           onClick={() => setActiveTab('sold_hidden')}
           className={`px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all flex items-center gap-1.5 cursor-pointer ${
             activeTab === 'sold_hidden'
-              ? 'bg-amber-400 text-slate-950 shadow-sm'
+              ? 'bg-nau-red text-white shadow-sm'
               : 'bg-nau-surface dark:bg-nau-background text-nau-text-secondary dark:text-nau-text-muted hover:bg-slate-100 dark:hover:bg-slate-800'
           }`}
         >
           <span>ĐÃ BÁN / ẨN TIN</span>
           <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-black ${
-            activeTab === 'sold_hidden' ? 'bg-slate-950 text-white' : 'bg-slate-200 dark:bg-slate-700'
+            activeTab === 'sold_hidden' ? 'bg-white/20 text-white' : 'bg-slate-200 dark:bg-slate-700'
           }`}>
             {soldOrHiddenProducts.length}
           </span>
@@ -229,13 +229,13 @@ export const ManageListingsPage = () => {
           onClick={() => setActiveTab('expired')}
           className={`px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all flex items-center gap-1.5 cursor-pointer ${
             activeTab === 'expired'
-              ? 'bg-amber-400 text-slate-950 shadow-sm'
+              ? 'bg-nau-red text-white shadow-sm'
               : 'bg-nau-surface dark:bg-nau-background text-nau-text-secondary dark:text-nau-text-muted hover:bg-slate-100 dark:hover:bg-slate-800'
           }`}
         >
           <span>HẾT HẠN</span>
           <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-black ${
-            activeTab === 'expired' ? 'bg-slate-950 text-white' : 'bg-slate-200 dark:bg-slate-700'
+            activeTab === 'expired' ? 'bg-white/20 text-white' : 'bg-slate-200 dark:bg-slate-700'
           }`}>
             {expiredProducts.length}
           </span>
@@ -246,13 +246,13 @@ export const ManageListingsPage = () => {
           onClick={() => setActiveTab('rejected')}
           className={`px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all flex items-center gap-1.5 cursor-pointer ${
             activeTab === 'rejected'
-              ? 'bg-amber-400 text-slate-950 shadow-sm'
+              ? 'bg-nau-red text-white shadow-sm'
               : 'bg-nau-surface dark:bg-nau-background text-nau-text-secondary dark:text-nau-text-muted hover:bg-slate-100 dark:hover:bg-slate-800'
           }`}
         >
           <span>BỊ TỪ CHỐI</span>
           <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-black ${
-            activeTab === 'rejected' ? 'bg-slate-950 text-white' : 'bg-slate-200 dark:bg-slate-700'
+            activeTab === 'rejected' ? 'bg-white/20 text-white' : 'bg-slate-200 dark:bg-slate-700'
           }`}>
             {rejectedProducts.length}
           </span>
@@ -267,7 +267,7 @@ export const ManageListingsPage = () => {
       ) : currentTabProducts.length === 0 ? (
         /* Empty State chuẩn phong cách Chợ Tốt */
         <div className="bg-nau-surface dark:bg-nau-background rounded-3xl border border-nau-border dark:border-nau-border p-8 sm:p-12 text-center space-y-4 shadow-xs">
-          <div className="w-20 h-20 rounded-3xl bg-amber-50 dark:bg-amber-950/30 flex items-center justify-center mx-auto text-amber-500">
+          <div className="w-20 h-20 rounded-3xl bg-red-50 dark:bg-red-950/30 flex items-center justify-center mx-auto text-nau-red">
             <PackageOpen className="w-10 h-10 stroke-[1.5]" />
           </div>
           <div className="space-y-1">
@@ -284,7 +284,7 @@ export const ManageListingsPage = () => {
           </div>
           <Link
             to="/create-product"
-            className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-amber-500 to-yellow-400 text-slate-950 text-xs font-black rounded-xl shadow-md shadow-amber-500/20 active:scale-95 transition-all"
+            className="inline-flex items-center gap-2 px-5 py-2.5 bg-nau-red hover:bg-nau-red-hover text-white text-xs font-bold rounded-xl shadow-md shadow-nau-red/25 active:scale-95 transition-all"
           >
             <PlusCircle className="w-4 h-4" />
             <span>Đăng tin bán ngay</span>
@@ -299,7 +299,7 @@ export const ManageListingsPage = () => {
             return (
               <div
                 key={product.id}
-                className="bg-nau-surface dark:bg-nau-background rounded-2xl border border-nau-border dark:border-nau-border p-3 sm:p-4 shadow-xs hover:border-amber-400/50 transition-all flex flex-col sm:flex-row gap-3 sm:gap-4 items-start sm:items-center justify-between"
+                className="bg-nau-surface dark:bg-nau-background rounded-2xl border border-nau-border dark:border-nau-border p-3 sm:p-4 shadow-xs hover:border-nau-red/40 transition-all flex flex-col sm:flex-row gap-3 sm:gap-4 items-start sm:items-center justify-between"
               >
                 {/* Product Info */}
                 <div className="flex items-center gap-3 min-w-0 w-full sm:w-auto">
@@ -347,7 +347,7 @@ export const ManageListingsPage = () => {
 
                     <Link
                       to={`/product/${product.id}`}
-                      className="block font-bold text-xs sm:text-sm text-nau-text dark:text-nau-text hover:text-amber-500 transition-colors line-clamp-1"
+                      className="block font-bold text-xs sm:text-sm text-nau-text dark:text-nau-text hover:text-nau-red transition-colors line-clamp-1"
                     >
                       {product.title}
                     </Link>
@@ -402,7 +402,7 @@ export const ManageListingsPage = () => {
                     <button
                       type="button"
                       onClick={() => handleToggleHide(product)}
-                      className="flex-1 sm:flex-none inline-flex items-center justify-center gap-1 px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold shadow-xs transition-colors cursor-pointer"
+                      className="flex-1 sm:flex-none inline-flex items-center justify-center gap-1 px-3 py-1.5 rounded-xl bg-nau-blue hover:bg-nau-blue-hover text-white text-xs font-bold shadow-xs transition-colors cursor-pointer"
                       title="Hiện lại tin đăng trên Chợ NAU"
                     >
                       <Eye className="w-3.5 h-3.5" />
